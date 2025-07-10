@@ -1,6 +1,9 @@
 // assets/js/script.js
 
-document.addEventListener('DOMContentLoaded', () => {
+// تمام منطق برنامه را در یک تابع گلوبال به نام mainAppLogic قرار می‌دهیم.
+// این تابع فقط زمانی فراخوانی می‌شود که مطمئن باشیم تمام CDNها و اسکریپت‌های
+// پیش‌نیاز (مانند js-yaml) بارگذاری شده‌اند.
+function mainAppLogic() {
 
     // =======================================================
     // ۰. متغیرهای سراسری و عناصر DOM اصلی
@@ -421,6 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+
         // ----------------------------------------------------
         // تولید بخش 'proxies'
         // ----------------------------------------------------
@@ -518,15 +522,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // تولید بخش 'proxy-groups'
         // ----------------------------------------------------
         let finalProxyGroups = [];
-        let finalProxyGroupNamesToInclude = new Set(); // از "Set" برای جلوگیری از تکرار استفاده می‌کنیم
+        let finalProxyGroupNamesToInclude = new Set();
 
-        // 1. اضافه کردن گروه های پایه (SELECT, دستی, خودکار, پشتیبان و مخفی ها)
         const baseProxyGroups = predefinedProxyGroups.filter(pg =>
             ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'].includes(pg.yamlKey)
         );
         baseProxyGroups.forEach(pg => finalProxyGroupNamesToInclude.add(pg.yamlKey));
 
-        // 2. اضافه کردن گروه هایی که Rule فعال به آنها اشاره دارد
         baseConfigObject.rules.forEach(ruleString => {
             const ruleTargetGroupMatch = ruleString.match(/,([^,]+)$/);
             if (ruleTargetGroupMatch) {
@@ -535,11 +537,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // حالا بر اساس `finalProxyGroupNamesToInclude`، آبجکت Proxy Groups را بازسازی می‌کنیم
-        // پروکسی گروه‌ها را به ترتیبی که در predefinedProxyGroups تعریف شده‌اند، فیلتر می‌کنیم
         let sortedActiveGroups = predefinedProxyGroups.filter(pg => finalProxyGroupNamesToInclude.has(pg.yamlKey));
 
-        // اطمینان حاصل می‌کنیم که "نوع انتخاب پروکسی 🔀" (اگر وجود دارد) در ابتدا باشد
         sortedActiveGroups.sort((a, b) => {
             if (a.yamlKey === 'نوع انتخاب پروکسی 🔀') return -1;
             if (b.yamlKey === 'نوع انتخاب پروکسی 🔀') return 1;
@@ -562,9 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pg.hidden !== undefined) groupObj.hidden = pg.hidden;
 
             let groupProxies = [];
-            // اگر گروهی است که پروکسی‌های انتخابی به آن تزریق می‌شوند
             if (['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯'].includes(pg.yamlKey)) {
-                // این گروه‌ها باید شامل DIRECT و REJECT و تمام پروکسی‌های فعال باشند
                 groupProxies.push("DIRECT", "REJECT");
                 finalProxies.forEach(p => {
                     if (p.name !== "DIRECT" && p.name !== "REJECT") {
@@ -572,19 +569,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             } else if (pg.proxies && pg.proxies.length > 0) {
-                // برای سایر گروه‌ها، از لیست پروکسی‌های پیش‌فرض تعریف شده در predefinedProxyGroups استفاده می‌کنیم
-                // اما فقط آنهایی که در activeProxyNames (یعنی در finalProxies) هستند و DIRECT/REJECT
                 pg.proxies.forEach(pName => {
                     if (activeProxyNames.has(pName) || pName === 'DIRECT' || pName === 'REJECT') {
                         groupProxies.push(pName);
                     }
                 });
-                // اطمینان حاصل می‌کنیم که اگر پروکسی‌های لیست شده در گروه فعال نبودند، DIRECT/REJECT باشند
                 if (groupProxies.length === 0 && pg.type !== 'reject' && pg.type !== 'direct') {
                      groupProxies.push("DIRECT", "REJECT");
                 }
+
             } else {
-                // اگر گروهی بدون پروکسی‌های خاص بود (و نوع آن reject/direct نبود)، حداقل DIRECT/REJECT را داشته باشد
                 if (pg.type !== 'reject' && pg.type !== 'direct') {
                     groupProxies.push("DIRECT", "REJECT");
                 }
@@ -598,9 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ====================================================================
         // ترکیب نهایی و تبدیل به YAML
         // ====================================================================
-        // حالا آبجکت baseConfigObject حاوی تمامی بخش‌های به‌روز شده است.
-        // آن را به YAML String تبدیل می‌کنیم.
-        const finalYamlOutput = jsyaml.dump(baseConfigObject, { indent: 2, lineWidth: -1 }); // lineWidth: -1 برای جلوگیری از شکستن خطوط طولانی
+        const finalYamlOutput = jsyaml.dump(baseConfigObject, { indent: 2, lineWidth: -1 });
 
         outputConfigTextarea.value = finalYamlOutput.trim();
         downloadConfigBtn.style.display = 'block';
@@ -671,4 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPredefinedProxies();
     loadCustomProxies();
     renderRulesAndProviders();
-});
+} // پایان تابع mainAppLogic
+
+// اینجا، تابع mainAppLogic را پس از اطمینان از لود شدن DOM و jsyaml فراخوانی می کنیم.
+// کد فراخوانی در index.html قرار دارد.
