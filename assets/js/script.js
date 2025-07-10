@@ -1,14 +1,11 @@
 // assets/js/script.js
 
-// تمام منطق برنامه را در یک تابع گلوبال به نام mainAppLogic قرار می‌دهیم.
-// این تابع فقط زمانی فراخوانی می‌شود که مطمئن باشیم تمام CDNها و اسکریپت‌های
-// پیش‌نیاز (مانند js-yaml) بارگذاری شده‌اند.
-function mainAppLogic() {
+document.addEventListener('DOMContentLoaded', () => {
 
     // =======================================================
-    // ۰. متغیرهای سراسری و عناصر DOM اصلی
+    // ۰. مت変数とDOM要素
     // =======================================================
-    let currentLanIp = ''; // متغیری برای نگهداری IP LAN وارد شده توسط کاربر
+    let currentLanIp = '';
 
     const mainContentWrapper = document.getElementById('mainContentWrapper');
     const footer = document.querySelector('footer');
@@ -16,7 +13,7 @@ function mainAppLogic() {
     const validateLanIpBtn = document.getElementById('validateLanIpBtn');
 
     // =======================================================
-    // ۱. توابع اعتبارسنجی IP و پورت
+    // 1. IPとポートの検証関数
     // =======================================================
     function isValidIP(ip) {
         const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
@@ -29,7 +26,7 @@ function mainAppLogic() {
     }
 
     // =======================================================
-    // ۲. مدیریت فعال/غیرفعال کردن محتوای سایت بر اساس IP LAN
+    // 2. IP LANに基づいてコンテンツの有効/無効を切り替える
     // =======================================================
     function toggleContentEnabled(enable) {
         if (enable) {
@@ -69,7 +66,7 @@ function mainAppLogic() {
     });
 
     // =======================================================
-    // ۳. مدیریت تم (حالت شب و روز)
+    // 3. テーマの管理（ダーク/ライトモード）
     // =======================================================
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const body = document.body;
@@ -105,12 +102,11 @@ function mainAppLogic() {
     });
 
     // =======================================================
-    // ۴. مدیریت انتخاب تمپلت کانفیگ (بخش مربوطه حذف شد)
+    // 4. コンフィグテンプレートの管理（カスタムセクションは削除）
     // =======================================================
-    // کدهای مربوط به این بخش حذف شده‌اند.
 
     // =======================================================
-    // ۵. مدیریت پروکسی‌های پیش‌فرض
+    // 5. 定義済みプロキシの管理
     // =======================================================
     const predefinedProxiesList = document.getElementById('predefinedProxiesList');
     const selectAllPredefinedProxiesBtn = document.getElementById('selectAllPredefinedProxies');
@@ -158,7 +154,7 @@ function mainAppLogic() {
 
 
     // =======================================================
-    // ۶. مدیریت پروکسی‌های کاستوم کاربر (ذخیره در localStorage کاربر)
+    // 6. ユーザーカスタムプロキシの管理（ローカルストレージに保存）
     // =======================================================
     const customPortInput = document.getElementById('customPortInput');
     const customNameInput = document.getElementById('customNameInput');
@@ -296,7 +292,7 @@ function mainAppLogic() {
     }
 
     // =======================================================
-    // ۷. مدیریت قوانین، Rule Providers و Proxy Groups (رندر دسته‌بندی شده)
+    // 7. ルール、ルールプロバイダー、プロキシグループの管理
     // =======================================================
     const rulesCheckboxesContainer = document.getElementById('rulesCheckboxes');
     const selectAllRulesBtn = document.getElementById('selectAllRules');
@@ -389,7 +385,7 @@ function mainAppLogic() {
 
 
     // =======================================================
-    // ۸. تولید و دانلود کانفیگ نهایی MiHoMo
+    // 8. 最終的なMiHoMoコンフィグの生成とダウンロード
     // =======================================================
     const generateConfigBtn = document.getElementById('generateConfigBtn');
     const outputConfigTextarea = document.getElementById('outputConfig');
@@ -426,7 +422,7 @@ function mainAppLogic() {
 
 
         // ----------------------------------------------------
-        // تولید بخش 'proxies'
+        // 'proxies'セクションの生成
         // ----------------------------------------------------
         let finalProxies = [];
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
@@ -462,7 +458,7 @@ function mainAppLogic() {
 
 
         // ----------------------------------------------------
-        // تولید بخش 'rule-providers'
+        // 'rule-providers'セクションの生成
         // ----------------------------------------------------
         let finalRuleProviders = {};
         let selectedRpKeys = new Set();
@@ -485,7 +481,7 @@ function mainAppLogic() {
 
 
         // ----------------------------------------------------
-        // تولید بخش 'rules'
+        // 'rules'セクションの生成
         // ----------------------------------------------------
         let finalRulesList = [];
         let selectedRuleStrings = new Set();
@@ -519,7 +515,7 @@ function mainAppLogic() {
 
 
         // ----------------------------------------------------
-        // تولید بخش 'proxy-groups'
+        // 'proxy-groups'セクションの生成
         // ----------------------------------------------------
         let finalProxyGroups = [];
         let finalProxyGroupNamesToInclude = new Set();
@@ -590,7 +586,7 @@ function mainAppLogic() {
 
 
         // ====================================================================
-        // ترکیب نهایی و تبدیل به YAML
+        // 最終的な結合とYAMLへの変換
         // ====================================================================
         const finalYamlOutput = jsyaml.dump(baseConfigObject, { indent: 2, lineWidth: -1 });
 
@@ -600,7 +596,7 @@ function mainAppLogic() {
 
 
     // =======================================================
-    // ۹. قابلیت دانلود کانفیگ به عنوان فایل .yaml
+    // 9. コンフィグを.yamlファイルとしてダウンロードする機能
     // =======================================================
     downloadConfigBtn.addEventListener('click', () => {
         const configContent = outputConfigTextarea.value;
@@ -616,7 +612,7 @@ function mainAppLogic() {
     });
 
     // =======================================================
-    // ۱۰. قابلیت اسکرول به بالا و پایین صفحه
+    // 10. ページ上下へのスクロール機能
     // =======================================================
     const scrollToTopBtn = document.getElementById('scrollToTopBtn');
     const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
@@ -647,7 +643,7 @@ function mainAppLogic() {
 
 
     // =======================================================
-    // ۱۱. فراخوانی اولیه توابع هنگام بارگذاری صفحه
+    // 11. ページロード時の初期関数呼び出し
     // =======================================================
     loadTheme();
 
@@ -663,7 +659,7 @@ function mainAppLogic() {
     renderPredefinedProxies();
     loadCustomProxies();
     renderRulesAndProviders();
-} // پایان تابع mainAppLogic
+} // ここでmainAppLogic関数の定義が終わる
 
-// اینجا، تابع mainAppLogic را پس از اطمینان از لود شدن DOM و jsyaml فراخوانی می کنیم.
-// کد فراخوانی در index.html قرار دارد.
+// DOMが完全に読み込まれてからmainAppLogicを実行する（index.htmlで呼び出される）
+// このファイル自体はグローバル関数mainAppLogicを定義するだけ
