@@ -90,5 +90,31 @@
     <script src="assets/js/predefinedProxies.js"></script>
     <script src="assets/js/rulesAndGroups.js"></script>
     <script src="assets/js/script.js"></script>
+
+    <script>
+        // این کد مطمئن می‌شود که تمامی اسکریپت‌ها (شامل js-yaml) لود شده‌اند
+        // قبل از اینکه منطق اصلی برنامه شروع به کار کند.
+        // ما از DOMContentLoaded داخل mainAppLogic استفاده کرده‌ایم،
+        // اما این یک لایه اطمینان اضافه می‌کند در صورتی که ترتیب لودینگ
+        // در مرورگرهای مختلف متفاوت باشد.
+        document.addEventListener('DOMContentLoaded', () => {
+            // چک می‌کنیم که jsyaml تعریف شده باشد
+            if (typeof jsyaml !== 'undefined') {
+                // اگر همه چیز لود شد، تابع اصلی script.js را اجرا کن
+                // ما logic را داخل script.js در یک تابع محصور کرده ایم
+                // و اینجا آن را صدا می زنیم.
+                // فرض می کنیم script.js یک تابع گلوبال mainAppLogic را expose می کند.
+                if (typeof mainAppLogic === 'function') {
+                    mainAppLogic();
+                } else {
+                    console.error("mainAppLogic تابع نیست. مشکلی در script.js وجود دارد.");
+                }
+            } else {
+                console.error("jsyaml هنوز تعریف نشده است. بارگذاری کتابخانه با مشکل مواجه شده است.");
+                // می توانید یک پیام خطا به کاربر نمایش دهید
+                alert("خطا: برخی از اجزای اصلی سایت بارگذاری نشدند. لطفاً صفحه را رفرش کنید یا از یک مرورگر دیگر استفاده کنید.");
+            }
+        });
+    </script>
 </body>
 </html>
