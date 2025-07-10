@@ -31,9 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleContentEnabled(enable) {
         if (enable) {
             mainContentWrapper.classList.remove('disabled-content');
-            mainContentWrapper.classList.add('active'); // اضافه کردن کلاس active برای ترنزیشن
+            mainContentWrapper.classList.add('active');
             footer.classList.remove('disabled-content');
-            footer.classList.add('active'); // اضافه کردن کلاس active برای ترنزیشن
+            footer.classList.add('active');
         } else {
             mainContentWrapper.classList.add('disabled-content');
             mainContentWrapper.classList.remove('active');
@@ -42,20 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ایونت لیسنر برای دکمه "تأیید و ادامه" IP LAN
     validateLanIpBtn.addEventListener('click', () => {
         const ip = lanIpInput.value.trim();
         if (isValidIP(ip)) {
             currentLanIp = ip;
-            localStorage.setItem('lanIp', ip); // ذخیره IP LAN در localStorage
+            localStorage.setItem('lanIp', ip);
             toggleContentEnabled(true);
             alert(`آدرس IP LAN شما (${ip}) با موفقیت تأیید شد. حالا می‌توانید ادامه دهید.`);
-            // پس از تأیید IP، پروکسی‌ها و قوانین را مجددا رندر می‌کنیم تا IP جدید اعمال شود.
             renderPredefinedProxies();
             renderCustomProxies();
             renderRulesAndProviders();
         } else {
-            currentLanIp = ''; // پاک کردن IP نامعتبر
+            currentLanIp = '';
             localStorage.removeItem('lanIp');
             toggleContentEnabled(false);
             alert('لطفاً یک آدرس IP معتبر LAN وارد کنید تا ادامه دهید.');
@@ -63,10 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ایونت لیسنر برای هر بار تغییر در فیلد IP LAN (تایپ کردن)
     lanIpInput.addEventListener('input', () => {
-        // هر بار که کاربر چیزی تایپ می‌کند، محتوای اصلی را غیرفعال می‌کنیم
-        // تا کاربر مجبور شود IP را تأیید کند.
         toggleContentEnabled(false);
     });
 
@@ -109,8 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // =======================================================
     // ۴. مدیریت انتخاب تمپلت کانفیگ (بخش مربوطه حذف شد)
     // =======================================================
-    // متغیرها و منطق مربوط به انتخاب تمپلت کاستوم از اینجا حذف شده‌اند.
-    // templateRadioها و customTemplateUrlInput دیگر وجود ندارند.
+    // کدهای مربوط به این بخش حذف شده‌اند.
 
     // =======================================================
     // ۵. مدیریت پروکسی‌های پیش‌فرض
@@ -170,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const customProxiesList = document.getElementById('customProxiesList');
     const noCustomConfigsMessage = document.getElementById('noCustomConfigsMessage');
 
-    let userCustomProxies = []; // آرایه‌ای برای نگهداری پروکسی‌های کاستوم کاربر
+    let userCustomProxies = [];
 
     function loadCustomProxies() {
         const storedProxies = localStorage.getItem('userCustomMiHoMoProxies');
@@ -242,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addCustomProxyBtn.addEventListener('click', () => {
         const port = customPortInput.value.trim();
         const name = customNameInput.value.trim();
-        const type = customTypeInput.value; // دریافت نوع پروتکل
+        const type = customTypeInput.value;
 
         if (!isValidPort(port)) {
             alert("لطفاً یک شماره پورت معتبر بین 1 تا 65535 وارد کنید.");
@@ -264,11 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (addCustomProxyBtn.dataset.editingIndex !== undefined) {
             const index = parseInt(addCustomProxyBtn.dataset.editingIndex);
-            userCustomProxies[index] = { port, name, type, udp: true }; // ذخیره نوع پروتکل
+            userCustomProxies[index] = { port, name, type, udp: true };
             delete addCustomProxyBtn.dataset.editingIndex;
             addCustomProxyBtn.textContent = 'افزودن سرور';
         } else {
-            userCustomProxies.push({ port, name, type, udp: true }); // ذخیره نوع پروتکل
+            userCustomProxies.push({ port, name, type, udp: true });
         }
 
         saveCustomProxies();
@@ -276,14 +270,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         customPortInput.value = '';
         customNameInput.value = '';
-        customTypeInput.value = 'socks5'; // بازگرداندن به مقدار پیش‌فرض
+        customTypeInput.value = 'socks5';
     });
 
     function editCustomProxy(index) {
         const proxy = userCustomProxies[index];
         customPortInput.value = proxy.port;
         customNameInput.value = proxy.name;
-        customTypeInput.value = proxy.type || 'socks5'; // اگر نوع ذخیره نشده بود، socks5 پیش‌فرض
+        customTypeInput.value = proxy.type || 'socks5';
 
         addCustomProxyBtn.textContent = 'به‌روزرسانی سرور';
         addCustomProxyBtn.dataset.editingIndex = index;
@@ -313,30 +307,26 @@ document.addEventListener('DOMContentLoaded', () => {
             categorizedItems[cat.key] = {
                 name: cat.name,
                 icon: cat.icon,
-                providers: [], // برای Rule Providers
-                rules: [],     // برای Rules
+                providers: [],
+                rules: [],
             };
         });
 
-        // پر کردن دسته‌بندی‌ها با Rule Providers
         predefinedRuleProviders.forEach(rp => {
             if (rp.group && categorizedItems[rp.group]) {
                 categorizedItems[rp.group].providers.push(rp);
             }
         });
 
-        // پر کردن دسته‌بندی‌ها با Rules
         rulesToGenerate.forEach(rule => {
-            if (rule.hidden) return; // Rules با `hidden: true` را در UI نمایش نمی‌دهیم.
+            if (rule.hidden) return;
             if (rule.group && categorizedItems[rule.group]) {
                 categorizedItems[rule.group].rules.push(rule);
             }
         });
 
-        // رندر کردن دسته‌بندی‌ها در UI
         for (const key in categorizedItems) {
             const category = categorizedItems[key];
-            // اگر گروهی محتوای قابل نمایش ندارد، رندر نمی‌شود (مثلاً Core Logic)
             if (category.providers.length === 0 && category.rules.length === 0) {
                 continue;
             }
@@ -349,9 +339,8 @@ document.addEventListener('DOMContentLoaded', () => {
             categorySection.appendChild(categoryTitle);
 
             const categoryGrid = document.createElement('div');
-            categoryGrid.className = 'proxy-cards-grid'; // استفاده مجدد از کلاس گرید برای چیدمان داخلی دسته‌بندی
+            categoryGrid.className = 'proxy-cards-grid';
 
-            // رندر Rule Providers
             category.providers.forEach(rp => {
                 const ruleItem = document.createElement('div');
                 ruleItem.className = 'rule-item';
@@ -359,12 +348,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="checkbox" id="${rp.id}" data-yaml-key="${rp.yamlKey}" data-type="rule-provider" ${rp.defaultChecked ? 'checked' : ''}>
                     <label for="${rp.id}">
                         <h4>${rp.name}</h4>
-                        <p class="description">${rp.description || ''}</p> </label>
+                        <p class="description">${rp.description || ''}</p>
+                    </label>
                 `;
                 categoryGrid.appendChild(ruleItem);
             });
 
-            // رندر Rules
             category.rules.forEach(rule => {
                 const ruleItem = document.createElement('div');
                 ruleItem.className = 'rule-item';
@@ -372,7 +361,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="checkbox" id="${rule.id}" data-rule-string="${rule.ruleString}" data-type="rule" ${rule.defaultChecked ? 'checked' : ''}>
                     <label for="${rule.id}">
                         <h4>${rule.name}</h4>
-                        <p class="description">${rule.description || ''}</p> </label>
+                        <p class="description">${rule.description || ''}</p>
+                    </label>
                 `;
                 categoryGrid.appendChild(ruleItem);
             });
@@ -415,11 +405,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let baseConfigContent = '';
 
-        // همیشه از تمپلت پیش‌فرض محلی استفاده می‌کنیم (بخش انتخاب تمپلت حذف شده)
+        // *** اصلاح مسیر تمپلت پیش‌فرض ***
+        // برای اطمینان از اینکه فایل در GitHub Pages پیدا می‌شود، مسیر را با استفاده از base URL سایت می‌سازیم.
+        const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+        const defaultTemplateUrl = baseUrl + 'config-templates/default-mihomo-template.yaml';
+
         try {
-            const response = await fetch('config-templates/default-mihomo-template.yaml');
+            const response = await fetch(defaultTemplateUrl); // استفاده از آدرس تصحیح شده
             if (!response.ok) {
-                throw new Error(`خطا در بارگذاری تمپلت پیش‌فرض: ${response.statusText || 'Failed to fetch'}. مطمئن شوید فایل default-mihomo-template.yaml در مسیر درست قرار دارد و سایت از طریق سرور (http:// یا https://) در حال اجراست.`);
+                throw new Error(`خطا در بارگذاری تمپلت پیش‌فرض: ${response.statusText || 'Failed to fetch'}. مطمئن شوید فایل default-mihomo-template.yaml در مسیر درست قرار دارد و دسترسی به آن امکان‌پذیر است.`);
             }
             baseConfigContent = await response.text();
         } catch (error) {
@@ -459,37 +453,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // تولید بخش 'proxies'
         // ----------------------------------------------------
         let generatedProxiesYaml = [];
-        // اضافه کردن پروکسی‌های پیش‌فرض انتخاب شده
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
-            const proxyServer = checkbox.dataset.ip; // این همان currentLanIp است
+            const proxyServer = checkbox.dataset.ip;
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp;
 
-            // ساختار YAML پروکسی بر اساس نوع (type)
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
-            if (proxyType === 'socks5' || proxyType === 'http') { // SOCKS5 و HTTP
+            if (proxyType === 'socks5' || proxyType === 'http') {
                 proxyYaml += `\n    udp: ${proxyUdp}`;
             }
-            // اینجا می‌توانید برای انواع دیگر پروتکل (vmess, trojan و...) جزئیات اضافه کنید
-            // else if (proxyType === 'vmess') {
-            //     proxyYaml += `\n    uuid: YOUR_UUID\n    alterId: 0\n    cipher: auto`;
-            // }
-
             generatedProxiesYaml.push(proxyYaml);
         });
 
-        // اضافه کردن پروکسی‌های کاستوم انتخاب شده
         document.querySelectorAll('#customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
-            const proxyServer = checkbox.dataset.ip; // این همان currentLanIp است
+            const proxyServer = checkbox.dataset.ip;
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp;
 
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
-            if (proxyType === 'socks5' || proxyType === 'http') { // SOCKS5 و HTTP
+            if (proxyType === 'socks5' || proxyType === 'http') {
                 proxyYaml += `\n    udp: ${proxyUdp}`;
             }
             generatedProxiesYaml.push(proxyYaml);
@@ -507,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // تولید بخش 'rule-providers'
         // ----------------------------------------------------
         let generatedRuleProvidersYaml = [];
-        let selectedRpKeys = new Set(); // کلیدهای Rule Provider های فعال
+        let selectedRpKeys = new Set();
         document.querySelectorAll('#rulesCheckboxes input[data-type="rule-provider"]:checked').forEach(checkbox => {
             selectedRpKeys.add(checkbox.dataset.yamlKey);
         });
@@ -527,26 +513,26 @@ document.addEventListener('DOMContentLoaded', () => {
         // تولید بخش 'rules'
         // ----------------------------------------------------
         let finalRulesList = [];
-        let selectedRuleStrings = new Set(); // رشته‌های Rule های فعال
+        let selectedRuleStrings = new Set();
         document.querySelectorAll('#rulesCheckboxes input[data-type="rule"]:checked').forEach(checkbox => {
             selectedRuleStrings.add(checkbox.dataset.ruleString);
         });
 
-        const alwaysIncludeRules = ['MATCH,نوع انتخاب پروکسی 🔀']; // Rule های که همیشه باید باشند
+        const alwaysIncludeRules = ['MATCH,نوع انتخاب پروکسی 🔀'];
         alwaysIncludeRules.forEach(rule => selectedRuleStrings.add(rule));
 
 
         rulesToGenerate.forEach(rule => {
             if (!selectedRuleStrings.has(rule.ruleString)) {
-                return; // اگر Rule توسط کاربر انتخاب نشده، آن را به خروجی اضافه نمی‌کنیم.
+                return;
             }
 
-            let isRelatedRpActive = true; // بررسی فعال بودن Rule Provider مرتبط
-            const rpMatch = rule.ruleString.match(/^RULE-SET,([^,]+),/); // استخراج نام RP از RULE-SET
+            let isRelatedRpActive = true;
+            const rpMatch = rule.ruleString.match(/^RULE-SET,([^,]+),/);
             if (rpMatch) {
                 const rpKey = rpMatch[1].trim();
                 if (!selectedRpKeys.has(rpKey)) {
-                    isRelatedRpActive = false; // Rule Provider مربوطه فعال نیست، پس Rule را هم حذف می‌کنیم.
+                    isRelatedRpActive = false;
                 }
             }
 
@@ -560,40 +546,30 @@ document.addEventListener('DOMContentLoaded', () => {
         // ----------------------------------------------------
         let generatedProxyGroupsYaml = [];
 
-        // ابتدا نام تمام پروکسی های فعال (پیش فرض و کاستوم) را جمع آوری می کنیم
         let activeProxyNames = new Set();
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             activeProxyNames.add(checkbox.dataset.name);
         });
-        activeProxyNames.add('DIRECT'); // DIRECT همیشه باید باشد
-        activeProxyNames.add('REJECT'); // REJECT همیشه باید باشد
+        activeProxyNames.add('DIRECT');
+        activeProxyNames.add('REJECT');
 
-        // لیست گروه های پروکسی که باید در خروجی نهایی باشند
         let finalProxyGroupsToInclude = new Set();
 
-        // 1. اضافه کردن گروه های پایه (SELECT, دستی, خودکار, پشتیبان و مخفی ها)
         const baseProxyGroups = predefinedProxyGroups.filter(pg =>
             ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'].includes(pg.yamlKey)
         );
         baseProxyGroups.forEach(pg => finalProxyGroupsToInclude.add(pg.yamlKey));
 
-        // 2. اضافه کردن گروه هایی که Rule فعال به آنها اشاره دارد
-        // این شامل Proxy Groups ی می شود که مستقیماً در UI نمایش داده نمی شدند.
-        finalRulesList.forEach(ruleString => { // از finalRulesList استفاده می‌کنیم چون فقط شامل Ruleهای فعال است.
-            const ruleTargetGroupMatch = ruleString.match(/,([^,]+)$/); // استخراج نام گروه از انتهای رول
+        finalRulesList.forEach(ruleString => {
+            const ruleTargetGroupMatch = ruleString.match(/,([^,]+)$/);
             if (ruleTargetGroupMatch) {
                 const targetGroupName = ruleTargetGroupMatch[1].trim();
                 finalProxyGroupsToInclude.add(targetGroupName);
             }
         });
 
-
-        // حالا بر اساس `finalProxyGroupsToInclude`، بخش `proxy-groups` را بازسازی می‌کنیم
-        // ابتدا Proxy Groups را به ترتیب مشخص در predefinedProxyGroups مرتب می‌کنیم
-        // فقط گروه‌هایی را که در finalProxyGroupsToInclude هستند، انتخاب می‌کنیم.
         let sortedActiveGroups = predefinedProxyGroups.filter(pg => finalProxyGroupsToInclude.has(pg.yamlKey));
 
-        // اگر "نوع انتخاب پروکسی 🔀" انتخاب شده بود، مطمئن شویم که در ابتدا قرار گیرد (اگر وجود دارد)
         sortedActiveGroups.sort((a, b) => {
             if (a.yamlKey === 'نوع انتخاب پروکسی 🔀') return -1;
             if (b.yamlKey === 'نوع انتخاب پروکسی 🔀') return 1;
