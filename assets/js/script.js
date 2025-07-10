@@ -3,9 +3,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // =======================================================
-    // ۰. مت変数とDOM要素
+    // ۰. متغیرهای سراسری و عناصر DOM اصلی
     // =======================================================
-    let currentLanIp = '';
+    let currentLanIp = ''; // متغیری برای نگهداری IP LAN وارد شده توسط کاربر
 
     const mainContentWrapper = document.getElementById('mainContentWrapper');
     const footer = document.querySelector('footer');
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const validateLanIpBtn = document.getElementById('validateLanIpBtn');
 
     // =======================================================
-    // 1. IPとポートの検証関数
+    // ۱. توابع اعتبارسنجی IP و پورت
     // =======================================================
     function isValidIP(ip) {
         const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =======================================================
-    // 2. IP LANに基づいてコンテンツの有効/無効を切り替える
+    // ۲. مدیریت فعال/غیرفعال کردن محتوای سایت بر اساس IP LAN
     // =======================================================
     function toggleContentEnabled(enable) {
         if (enable) {
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // =======================================================
-    // 3. テーマの管理（ダーク/ライトモード）
+    // ۳. مدیریت تم (حالت شب و روز)
     // =======================================================
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const body = document.body;
@@ -102,11 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // =======================================================
-    // 4. コンフィグテンプレートの管理（カスタムセクションは削除）
+    // ۴. مدیریت انتخاب تمپلت کانفیگ (بخش مربوطه حذف شد)
     // =======================================================
+    // کدهای مربوط به این بخش حذف شده‌اند.
 
     // =======================================================
-    // 5. 定義済みプロキシの管理
+    // ۵. مدیریت پروکسی‌های پیش‌فرض
     // =======================================================
     const predefinedProxiesList = document.getElementById('predefinedProxiesList');
     const selectAllPredefinedProxiesBtn = document.getElementById('selectAllPredefinedProxies');
@@ -154,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =======================================================
-    // 6. ユーザーカスタムプロキシの管理（ローカルストレージに保存）
+    // ۶. مدیریت پروکسی‌های کاستوم کاربر (ذخیره در localStorage کاربر)
     // =======================================================
     const customPortInput = document.getElementById('customPortInput');
     const customNameInput = document.getElementById('customNameInput');
@@ -292,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =======================================================
-    // 7. ルール、ルールプロバイダー、プロキシグループの管理
+    // ۷. مدیریت قوانین، Rule Providers و Proxy Groups (رندر دسته‌بندی شده)
     // =======================================================
     const rulesCheckboxesContainer = document.getElementById('rulesCheckboxes');
     const selectAllRulesBtn = document.getElementById('selectAllRules');
@@ -385,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =======================================================
-    // 8. 最終的なMiHoMoコンフィグの生成とダウンロード
+    // ۸. تولید و دانلود کانفیگ نهایی MiHoMo
     // =======================================================
     const generateConfigBtn = document.getElementById('generateConfigBtn');
     const outputConfigTextarea = document.getElementById('outputConfig');
@@ -402,65 +403,96 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        let baseConfigObject;
+        let baseConfigContent = '';
 
+        // *** اصلاح مسیر تمپلت پیش‌فرض ***
+        // برای اطمینان از اینکه فایل در GitHub Pages پیدا می‌شود، مسیر را با استفاده از base URL سایت می‌سازیم.
         const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
         const defaultTemplateUrl = baseUrl + 'config-templates/default-mihomo-template.yaml';
 
         try {
-            const response = await fetch(defaultTemplateUrl);
+            const response = await fetch(defaultTemplateUrl); // استفاده از آدرس تصحیح شده
             if (!response.ok) {
                 throw new Error(`خطا در بارگذاری تمپلت پیش‌فرض: ${response.statusText || 'Failed to fetch'}. مطمئن شوید فایل default-mihomo-template.yaml در مسیر درست قرار دارد و دسترسی به آن امکان‌پذیر است.`);
             }
-            const baseConfigContent = await response.text();
-            baseConfigObject = jsyaml.load(baseConfigContent);
+            baseConfigContent = await response.text();
         } catch (error) {
-            alert(`خطا در بارگذاری یا پارس کردن تمپلت پیش‌فرض: ${error.message}`);
+            alert(`خطا در بارگذاری تمپلت پیش‌فرض: ${error.message}`);
             outputConfigTextarea.value = '';
             return;
         }
 
+        // ----------------------------------------------------
+        // استخراج بخش‌های اصلی کانفیگ از تمپلت پایه با RegEx
+        // ----------------------------------------------------
+        const ruleProvidersSectionMatch = baseConfigContent.match(/^rule-providers:([\s\S]*?)(?=^proxies:|^proxy-groups:|^rules:|^ntp:|$)/m);
+        const proxiesSectionMatch = baseConfigContent.match(/^proxies:([\s\S]*?)(?=^proxy-groups:|^rule-providers:|^rules:|^ntp:|$)/m);
+        const proxyGroupsSectionMatch = baseConfigContent.match(/^proxy-groups:([\s\S]*?)(?=^rules:|^rule-providers:|^proxies:|^ntp:|$)/m);
+        const rulesSectionMatch = baseConfigContent.match(/^rules:([\s\S]*?)(?=^ntp:|$)/m);
+        const ntpSectionMatch = baseConfigContent.match(/^ntp:([\s\S]*?)$/m);
+
+        let topSectionContent = '';
+        const firstMajorSectionIndex = Math.min(
+            ruleProvidersSectionMatch ? ruleProvidersSectionMatch.index : Infinity,
+            proxiesSectionMatch ? proxiesSectionMatch.index : Infinity,
+            proxyGroupsSectionMatch ? proxyGroupsSectionMatch.index : Infinity,
+            rulesSectionMatch ? rulesSectionMatch.index : Infinity,
+            ntpSectionMatch ? ntpSectionMatch.index : Infinity
+        );
+
+        if (firstMajorSectionIndex !== Infinity) {
+            topSectionContent = baseConfigContent.substring(0, firstMajorSectionIndex);
+        } else {
+            topSectionContent = baseConfigContent;
+        }
+
+        let bottomSectionContent = ntpSectionMatch ? ntpSectionMatch[0] : '';
+
 
         // ----------------------------------------------------
-        // 'proxies'セクションの生成
+        // تولید بخش 'proxies'
         // ----------------------------------------------------
-        let finalProxies = [];
+        let generatedProxiesYaml = [];
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
-            finalProxies.push({
-                name: checkbox.dataset.name,
-                type: checkbox.dataset.type,
-                server: currentLanIp,
-                port: parseInt(checkbox.dataset.port),
-                udp: checkbox.dataset.udp === 'true'
-            });
+            const proxyName = checkbox.dataset.name;
+            const proxyType = checkbox.dataset.type;
+            const proxyServer = checkbox.dataset.ip;
+            const proxyPort = checkbox.dataset.port;
+            const proxyUdp = checkbox.dataset.udp;
+
+            let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
+            if (proxyType === 'socks5' || proxyType === 'http') {
+                proxyYaml += `\n    udp: ${proxyUdp}`;
+            }
+            generatedProxiesYaml.push(proxyYaml);
         });
 
         document.querySelectorAll('#customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
-            finalProxies.push({
-                name: checkbox.dataset.name,
-                type: checkbox.dataset.type,
-                server: currentLanIp,
-                port: parseInt(checkbox.dataset.port),
-                udp: checkbox.dataset.udp === 'true'
-            });
+            const proxyName = checkbox.dataset.name;
+            const proxyType = checkbox.dataset.type;
+            const proxyServer = checkbox.dataset.ip;
+            const proxyPort = checkbox.dataset.port;
+            const proxyUdp = checkbox.dataset.udp;
+
+            let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
+            if (proxyType === 'socks5' || proxyType === 'http') {
+                proxyYaml += `\n    udp: ${proxyUdp}`;
+            }
+            generatedProxiesYaml.push(proxyYaml);
         });
 
-        if (finalProxies.length === 0) {
-            finalProxies.push({ name: "DIRECT", type: "direct" });
-            finalProxies.push({ name: "REJECT", type: "reject" });
-        } else {
-            const hasDirect = finalProxies.some(p => p.name === "DIRECT");
-            const hasReject = finalProxies.some(p => p.name === "REJECT");
-            if (!hasDirect) finalProxies.push({ name: "DIRECT", type: "direct" });
-            if (!hasReject) finalProxies.push({ name: "REJECT", type: "reject" });
+        if (generatedProxiesYaml.length === 0) {
+            generatedProxiesYaml.push(`
+  - name: "DIRECT"
+    type: direct
+  - name: "REJECT"
+    type: reject`);
         }
-        baseConfigObject.proxies = finalProxies;
-
 
         // ----------------------------------------------------
-        // 'rule-providers'セクションの生成
+        // تولید بخش 'rule-providers'
         // ----------------------------------------------------
-        let finalRuleProviders = {};
+        let generatedRuleProvidersYaml = [];
         let selectedRpKeys = new Set();
         document.querySelectorAll('#rulesCheckboxes input[data-type="rule-provider"]:checked').forEach(checkbox => {
             selectedRpKeys.add(checkbox.dataset.yamlKey);
@@ -468,20 +500,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         predefinedRuleProviders.forEach(rp => {
             if (selectedRpKeys.has(rp.yamlKey)) {
-                finalRuleProviders[rp.yamlKey] = {
-                    type: rp.type || 'http',
-                    behavior: rp.behavior,
-                    url: rp.url,
-                    interval: 86400,
-                    path: `./ruleset/${rp.yamlKey}.yaml`
-                };
+                generatedRuleProvidersYaml.push(`  ${rp.yamlKey}:
+    type: http
+    behavior: ${rp.behavior}
+    url: ${rp.url}
+    interval: 86400
+    path: ./ruleset/${rp.yamlKey}.yaml`);
             }
         });
-        baseConfigObject['rule-providers'] = finalRuleProviders;
-
 
         // ----------------------------------------------------
-        // 'rules'セクションの生成
+        // تولید بخش 'rules'
         // ----------------------------------------------------
         let finalRulesList = [];
         let selectedRuleStrings = new Set();
@@ -508,32 +537,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (isRelatedRpActive) {
-                finalRulesList.push(rule.ruleString);
+                finalRulesList.push(`  - ${rule.ruleString}`);
             }
         });
-        baseConfigObject.rules = finalRulesList;
-
 
         // ----------------------------------------------------
-        // 'proxy-groups'セクションの生成
+        // تولید بخش 'proxy-groups'
         // ----------------------------------------------------
-        let finalProxyGroups = [];
-        let finalProxyGroupNamesToInclude = new Set();
+        let generatedProxyGroupsYaml = [];
+
+        let activeProxyNames = new Set();
+        document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
+            activeProxyNames.add(checkbox.dataset.name);
+        });
+        activeProxyNames.add('DIRECT');
+        activeProxyNames.add('REJECT');
+
+        let finalProxyGroupsToInclude = new Set();
 
         const baseProxyGroups = predefinedProxyGroups.filter(pg =>
             ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'].includes(pg.yamlKey)
         );
-        baseProxyGroups.forEach(pg => finalProxyGroupNamesToInclude.add(pg.yamlKey));
+        baseProxyGroups.forEach(pg => finalProxyGroupsToInclude.add(pg.yamlKey));
 
-        baseConfigObject.rules.forEach(ruleString => {
+        finalRulesList.forEach(ruleString => {
             const ruleTargetGroupMatch = ruleString.match(/,([^,]+)$/);
             if (ruleTargetGroupMatch) {
                 const targetGroupName = ruleTargetGroupMatch[1].trim();
-                finalProxyGroupNamesToInclude.add(targetGroupName);
+                finalProxyGroupsToInclude.add(targetGroupName);
             }
         });
 
-        let sortedActiveGroups = predefinedProxyGroups.filter(pg => finalProxyGroupNamesToInclude.has(pg.yamlKey));
+        let sortedActiveGroups = predefinedProxyGroups.filter(pg => finalProxyGroupsToInclude.has(pg.yamlKey));
 
         sortedActiveGroups.sort((a, b) => {
             if (a.yamlKey === 'نوع انتخاب پروکسی 🔀') return -1;
@@ -543,60 +578,82 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         sortedActiveGroups.forEach(pg => {
-            let groupObj = {
-                name: pg.yamlKey,
-                type: pg.type
-            };
-            if (pg.icon) groupObj.icon = pg.icon;
-            if (pg.url) groupObj.url = pg.url;
-            if (pg.interval) groupObj.interval = pg.interval;
-            if (pg.timeout) groupObj.timeout = pg.timeout;
-            if (pg.tolerance) groupObj.tolerance = pg.tolerance;
-            if (pg.max_failed_times) groupObj.max_failed_times = pg.max_failed_times;
-            if (pg.lazy !== undefined) groupObj.lazy = pg.lazy;
-            if (pg.hidden !== undefined) groupObj.hidden = pg.hidden;
+            let groupContent = `  - name: "${pg.yamlKey}"\n    type: ${pg.type}`;
+            if (pg.icon) groupContent += `\n    icon: ${pg.icon}`;
+            if (pg.url) groupContent += `\n    url: ${pg.url}`;
+            if (pg.interval) groupContent += `\n    interval: ${pg.interval}`;
+            if (pg.timeout) groupContent += `\n    timeout: ${pg.timeout}`;
+            if (pg.tolerance) groupContent += `\n    tolerance: ${pg.tolerance}`;
+            if (pg.max_failed_times) groupContent += `\n    max-failed-times: ${pg.max_failed_times}`;
+            if (pg.lazy !== undefined) groupContent += `\n    lazy: ${pg.lazy}`;
+            if (pg.hidden !== undefined) groupContent += `\n    hidden: ${pg.hidden}`;
 
-            let groupProxies = [];
+            groupContent += `\n    proxies:`;
+
             if (['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯'].includes(pg.yamlKey)) {
-                groupProxies.push("DIRECT", "REJECT");
-                finalProxies.forEach(p => {
-                    if (p.name !== "DIRECT" && p.name !== "REJECT") {
-                        groupProxies.push(p.name);
+                groupContent += `\n      - DIRECT\n      - REJECT`;
+                activeProxyNames.forEach(name => {
+                    if (name !== 'DIRECT' && name !== 'REJECT') {
+                        groupContent += `\n      - "${name}"`;
                     }
                 });
             } else if (pg.proxies && pg.proxies.length > 0) {
-                pg.proxies.forEach(pName => {
-                    if (activeProxyNames.has(pName) || pName === 'DIRECT' || pName === 'REJECT') {
-                        groupProxies.push(pName);
-                    }
+                const filteredProxiesForGroup = pg.proxies.filter(pName => activeProxyNames.has(pName) || pName === 'DIRECT' || pName === 'REJECT');
+                filteredProxiesForGroup.forEach(p => {
+                    groupContent += `\n      - ${p}`;
                 });
-                if (groupProxies.length === 0 && pg.type !== 'reject' && pg.type !== 'direct') {
-                     groupProxies.push("DIRECT", "REJECT");
+                if (filteredProxiesForGroup.length === 0 && pg.type !== 'reject' && pg.type !== 'direct') {
+                     groupContent += `\n      - DIRECT\n      - REJECT`;
                 }
 
             } else {
                 if (pg.type !== 'reject' && pg.type !== 'direct') {
-                    groupProxies.push("DIRECT", "REJECT");
+                    groupContent += `\n      - DIRECT\n      - REJECT`;
                 }
             }
-            groupObj.proxies = groupProxies;
-            finalProxyGroups.push(groupObj);
+            generatedProxyGroupsYaml.push(groupContent);
         });
-        baseConfigObject['proxy-groups'] = finalProxyGroups;
 
 
         // ====================================================================
-        // 最終的な結合とYAMLへの変換
+        // ترکیب نهایی تمامی بخش‌های کانفیگ YAML
         // ====================================================================
-        const finalYamlOutput = jsyaml.dump(baseConfigObject, { indent: 2, lineWidth: -1 });
+        let finalConfigOutput = [];
 
-        outputConfigTextarea.value = finalYamlOutput.trim();
+        if (topSectionContent.trim()) {
+            finalConfigOutput.push(topSectionContent.trim());
+        }
+
+        if (generatedRuleProvidersYaml.length > 0) {
+            finalConfigOutput.push('rule-providers:');
+            finalConfigOutput.push(generatedRuleProvidersYaml.join('\n'));
+        }
+
+        finalConfigOutput.push('proxies:');
+        finalConfigOutput.push(generatedProxiesYaml.join(''));
+
+        finalConfigOutput.push('proxy-groups:');
+        finalConfigOutput.push(generatedProxyGroupsYaml.join('\n'));
+
+        finalConfigOutput.push('rules:');
+        if (finalRulesList.length > 0) {
+            finalConfigOutput.push(finalRulesList.join('\n'));
+        } else {
+            finalConfigOutput.push(`  - MATCH,نوع انتخاب پروکسی 🔀`);
+        }
+
+        if (bottomSectionContent.trim()) {
+            finalConfigOutput.push(bottomSectionContent.trim());
+        }
+
+
+        outputConfigTextarea.value = finalConfigOutput.join('\n\n').trim();
         downloadConfigBtn.style.display = 'block';
     });
 
 
     // =======================================================
-    // 9. コンフィグを.yamlファイルとしてダウンロードする機能
+    // ۹. قابلیت دانلود کانفیگ به عنوان فایل .yaml
     // =======================================================
     downloadConfigBtn.addEventListener('click', () => {
         const configContent = outputConfigTextarea.value;
@@ -612,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // =======================================================
-    // 10. ページ上下へのスクロール機能
+    // ۱۰. قابلیت اسکرول به بالا و پایین صفحه
     // =======================================================
     const scrollToTopBtn = document.getElementById('scrollToTopBtn');
     const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
@@ -643,7 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =======================================================
-    // 11. ページロード時の初期関数呼び出し
+    // ۱۱. فراخوانی اولیه توابع هنگام بارگذاری صفحه
     // =======================================================
     loadTheme();
 
@@ -659,7 +716,4 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPredefinedProxies();
     loadCustomProxies();
     renderRulesAndProviders();
-} // ここでmainAppLogic関数の定義が終わる
-
-// DOMが完全に読み込まれてからmainAppLogicを実行する（index.htmlで呼び出される）
-// このファイル自体はグローバル関数mainAppLogicを定義するだけ
+});
