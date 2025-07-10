@@ -1,0 +1,597 @@
+/* assets/css/style.css */
+
+/* Import Vazirmatn Font from CDN */
+/* این خط، فونت وزیر را مستقیماً از یک سرور خارجی لود می‌کند */
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/css/Vazirmatn-Variable.css');
+
+
+/* CSS Variables for Light/Dark Mode */
+/* تعریف متغیرهای CSS برای رنگ‌ها و سایه‌ها در حالت روشن (پیش‌فرض) */
+:root {
+    --background-color: #f0f2f5;
+    --text-color: #333;
+    --heading-color: #222;
+    --text-color-light: #555;
+    --text-color-muted: #777;
+    --panel-bg-color: #ffffff;
+    --panel-border-color: #e0e0e0;
+    --card-bg-color: #fcfcfc;
+    --card-inner-bg-color: #f9f9f9;
+    --border-color: #ececec;
+    --primary-color: #007bff; /* آبی اصلی برای دکمه‌ها و هایلایت‌ها */
+    --primary-dark-color: #0056b3;
+    --button-text-color: #fff;
+    --input-bg-color: #f8f8f8;
+    --input-border-color: #ddd;
+    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    --hover-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    --textarea-bg-color: #f5f5f5;
+    --textarea-border-color: #ccc;
+    --code-bg-color: #e9ecef;
+    --info-message-color: #5bc0de; /* رنگ آبی برای پیام‌های اطلاعاتی */
+    --primary-color-rgb: 0, 123, 255; /* نسخه RGB برای استفاده در RGBA (برای سایه‌ها) */
+    --info-message-color-rgb: 91, 192, 222;
+}
+
+/* تعریف متغیرهای CSS برای رنگ‌ها و سایه‌ها در حالت تاریک (dark-mode) */
+body.dark-mode {
+    --background-color: #282c34;
+    --text-color: #f8f8f2;
+    --heading-color: #e0e0e0;
+    --text-color-light: #cccccc;
+    --text-color-muted: #aaaaaa;
+    --panel-bg-color: #3a4049;
+    --panel-border-color: #4a4d52;
+    --card-bg-color: #3f444c;
+    --card-inner-bg-color: #484d57;
+    --border-color: #555a60;
+    --primary-color: #61afef; /* آبی روشن‌تر برای دارک مود */
+    --primary-dark-color: #529fd8;
+    --button-text-color: #fff;
+    --input-bg-color: #31353b;
+    --input-border-color: #555;
+    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --hover-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    --textarea-bg-color: #31353b;
+    --textarea-border-color: #555;
+    --code-bg-color: #4e5560;
+    --info-message-color: #87ceeb;
+    --primary-color-rgb: 97, 175, 239;
+    --info-message-color-rgb: 135, 206, 235;
+}
+
+/* Global Styles - استایل‌های کلی برای بدنه و عناصر اصلی HTML */
+body {
+    font-family: 'Vazirmatn', sans-serif; /* اعمال فونت وزیر به کل متن */
+    direction: rtl; /* راست‌چین کردن متن برای زبان فارسی */
+    text-align: right; /* تراز کردن متن به سمت راست */
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease; /* انیمیشن نرم برای تغییر تم */
+}
+
+/* Box Sizing - برای مدیریت بهتر ابعاد عناصر، padding و border در عرض و ارتفاع محاسبه شوند */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* استایل برای محتوای غیرفعال */
+.disabled-content {
+    pointer-events: none; /* جلوگیری از کلیک روی عناصر */
+    opacity: 0.5; /* کاهش شفافیت */
+    filter: grayscale(100%); /* اعمال فیلتر خاکستری */
+    transition: opacity 0.5s ease, filter 0.5s ease;
+}
+.disabled-content.active {
+    pointer-events: all;
+    opacity: 1;
+    filter: grayscale(0%);
+}
+
+/* Header - استایل بخش هدر بالای صفحه */
+header {
+    background-color: var(--panel-bg-color);
+    color: var(--heading-color);
+    padding: 20px 30px;
+    box-shadow: var(--box-shadow);
+    display: flex; /* برای چیدمان عنوان و دکمه تم کنار هم */
+    justify-content: space-between; /* توزیع فضا بین عنوان و دکمه */
+    align-items: center; /* هم‌ترازی عمودی */
+    border-bottom: 1px solid var(--panel-border-color);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8em;
+    color: var(--heading-color);
+}
+
+/* Theme Toggle Button - دکمه تغییر حالت شب و روز */
+#themeToggleBtn {
+    background: none; /* بدون پس‌زمینه */
+    border: none; /* بدون حاشیه */
+    color: var(--text-color);
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: color 0.3s ease; /* انیمیشن برای تغییر رنگ آیکون */
+}
+
+#themeToggleBtn:hover {
+    color: var(--primary-color); /* تغییر رنگ در حالت هاور */
+}
+
+/* Screen Reader Only - برای دسترسی‌پذیری، متن‌هایی که فقط توسط صفحه‌خوان‌ها خوانده می‌شوند */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Main Content Layout - چیدمان محتوای اصلی سایت */
+main {
+    max-width: 960px; /* حداکثر عرض محتوا برای خوانایی بهتر */
+    margin: 30px auto; /* فاصله از بالا و پایین و وسط‌چین کردن افقی */
+    padding: 0 15px; /* فاصله از کنارها در صفحات کوچک‌تر */
+    display: grid; /* استفاده از گرید برای چیدمان بخش‌ها (section) */
+    gap: 30px; /* فاصله بین هر بخش */
+}
+
+/* Panel Styles - استایل‌دهی به بخش‌های مختلف سایت که در یک پنل قرار می‌گیرند */
+.panel {
+    background-color: var(--panel-bg-color);
+    border-radius: 10px; /* گوشه‌های گرد */
+    box-shadow: var(--box-shadow);
+    padding: 25px;
+    border: 1px solid var(--panel-border-color);
+}
+
+.panel h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 1.5em;
+    color: var(--heading-color);
+    border-bottom: 1px solid var(--border-color); /* خط زیر عنوان هر بخش */
+    padding-bottom: 15px;
+}
+
+/* Input Fields and Buttons - استایل عمومی برای فیلدهای ورودی و دکمه‌ها */
+input[type="text"],
+input[type="number"],
+input[type="url"],
+textarea {
+    width: 100%; /* تمام عرض فضای موجود را اشغال کند */
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 5px;
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+    font-family: 'Vazirmatn', sans-serif; /* اعمال فونت وزیر به فیلدهای ورودی */
+    font-size: 0.95em;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* انیمیشن برای فوکوس */
+}
+
+/* استایل فوکوس (وقتی کاربر روی فیلد کلیک می‌کند) */
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="url"]:focus,
+textarea:focus {
+    outline: none; /* حذف outline پیش‌فرض مرورگر */
+    border-color: var(--primary-color); /* تغییر رنگ حاشیه */
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.25); /* سایه آبی کمرنگ دور فیلد */
+}
+
+/* استایل فیلد ورودی غیرفعال (disabled) */
+input[type="url"][disabled] {
+    background-color: var(--input-bg-color);
+    opacity: 0.7; /* کمی کمرنگ‌تر */
+    cursor: not-allowed; /* نشانگر ماوس تغییر می‌کند */
+}
+
+/* استایل عمومی دکمه‌ها */
+button {
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-family: 'Vazirmatn', sans-serif; /* اعمال فونت وزیر به دکمه‌ها */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* انیمیشن برای هاور و کلیک */
+    display: inline-flex; /* برای اینکه آیکون و متن کنار هم قرار بگیرند */
+    align-items: center;
+    justify-content: center;
+}
+
+button i {
+    margin-right: 8px; /* فاصله برای آیکون‌های داخل دکمه */
+}
+
+button:hover {
+    background-color: var(--primary-dark-color);
+    transform: translateY(-2px); /* حرکت دکمه به سمت بالا در هاور */
+}
+
+button:active {
+    transform: translateY(0); /* برگشت دکمه به حالت اولیه در کلیک */
+}
+
+/* Template Options - استایل بخش انتخاب تمپلت کانفیگ (رادیو باتن‌ها) */
+.template-option {
+    display: flex;
+    align-items: center; /* هم‌ترازی عمودی */
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+/* استایل رادیو باتن‌های سفارشی (ظاهر گرد و رنگی) */
+.template-option input[type="radio"] {
+    appearance: none; /* حذف ظاهر پیش‌فرض مرورگر */
+    -webkit-appearance: none; /* برای سازگاری با سافاری */
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%; /* دایره‌ای کردن */
+    margin-left: 10px; /* فاصله از متن لیبل */
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0; /* جلوگیری از کوچک شدن رادیو باتن */
+}
+
+.template-option input[type="radio"]:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.template-option input[type="radio"]:checked::after {
+    content: ''; /* محتوای داخلی برای نمایش انتخاب شدن */
+    width: 10px;
+    height: 10px;
+    background-color: var(--button-text-color); /* رنگ دایره داخلی (سفید) */
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* وسط‌چین کردن دایره داخلی */
+}
+
+.template-option label {
+    flex-grow: 1; /* اجازه می‌دهد لیبل فضای باقی‌مانده را اشغال کند */
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+/* Proxy/Rule Cards Grid - استایل گرید برای نمایش کارت‌های پروکسی و قوانین */
+.proxy-cards-grid, .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* چیدمان واکنش‌گرا با حداقل عرض ۲۸۰ پیکسل */
+    gap: 15px; /* فاصله بین کارت‌ها */
+    margin-bottom: 25px;
+}
+
+/* استایل هر کارت پروکسی یا Rule Item */
+.proxy-card, .rule-item {
+    background-color: var(--card-inner-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    transition: all 0.3s ease; /* انیمیشن برای هاور */
+    display: flex;
+    align-items: flex-start; /* هم‌ترازی محتوا از بالا */
+    position: relative; /* برای موقعیت‌دهی دکمه‌های اکشن (ویرایش/حذف) */
+}
+
+.proxy-card:hover, .rule-item:hover {
+    box-shadow: var(--hover-shadow);
+    transform: translateY(-3px); /* حرکت کارت به سمت بالا در هاور */
+}
+
+/* استایل چک‌باکس‌های سفارشی برای پروکسی و قوانین (ظاهر مربعی و رنگی) */
+.proxy-card input[type="checkbox"],
+.rule-item input[type="checkbox"] {
+    appearance: none; /* حذف ظاهر پیش‌فرض مرورگر */
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--primary-color);
+    border-radius: 5px; /* گوشه‌های کمی گرد */
+    margin-left: 12px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.proxy-card input[type="checkbox"]:checked,
+.rule-item input[type="checkbox"]:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.proxy-card input[type="checkbox"]:checked::after,
+.rule-item input[type="checkbox"]:checked::after {
+    content: '\f00c'; /* آیکون تیک از Font Awesome (کد یونی‌کد) */
+    font-family: "Font Awesome 5 Free"; /* استفاده از فونت Font Awesome */
+    font-weight: 900; /* برای نمایش solid آیکون */
+    color: var(--button-text-color); /* رنگ تیک (سفید) */
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* وسط‌چین کردن تیک */
+}
+
+.proxy-card label, .rule-item label {
+    flex-grow: 1;
+    cursor: pointer;
+}
+
+.proxy-card h4, .rule-item h4 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: var(--heading-color);
+    font-size: 1.1em;
+}
+
+.proxy-card p, .rule-item p {
+    margin: 0 0 5px 0;
+    font-size: 0.9em;
+    color: var(--text-color-light);
+}
+
+.proxy-card .description, .rule-item .description {
+    font-size: 0.85em;
+    color: var(--text-color-muted);
+    line-height: 1.5;
+    margin-top: 10px;
+}
+
+/* Actions for Custom Proxies (Edit/Delete Buttons) */
+.proxy-card .actions {
+    position: absolute;
+    top: 10px;
+    left: 10px; /* برای نمایش در گوشه بالا سمت چپ کارت */
+    display: flex;
+    gap: 5px;
+}
+
+.proxy-card .actions button {
+    background: none; /* بدون پس‌زمینه */
+    border: none;
+    color: var(--text-color-light);
+    font-size: 0.9em;
+    padding: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.proxy-card .actions button:hover {
+    color: var(--primary-color);
+    background-color: rgba(var(--primary-color-rgb), 0.1); /* پس‌زمینه کمرنگ در هاور */
+    transform: none; /* حذف ترنسفورم دکمه‌های کوچک */
+}
+
+/* Specific button styles for select/deselect all */
+.selection-controls {
+    text-align: center;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* فاصله بین دکمه‌ها */
+}
+
+.selection-controls button {
+    padding: 10px 20px;
+    font-size: 0.95em;
+}
+
+/* Custom Proxies Input Form - استایل فرم افزودن پروکسی کاستوم */
+.custom-proxies-section .input-form {
+    display: grid;
+    /* چیدمان ستونی برای فیلدها: حداقل 180px عرض، یا فضای مساوی */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+    align-items: end; /* ترازبندی دکمه‌ها و فیلدها در پایین */
+}
+
+.custom-proxies-section .input-form input {
+    margin-bottom: 0; /* حذف margin-bottom پیش‌فرض برای هم‌ترازی */
+}
+/* اضافه شد: استایل برای تگ select در فرم کاستوم پروکسی */
+.custom-proxies-section .input-form select {
+    margin-bottom: 0; /* حذف margin-bottom پیش‌فرض برای هم‌ترازی */
+}
+
+/* پیام‌های اطلاعاتی مانند "هنوز سرور کاستومی اضافه نشده است." */
+.info-message {
+    text-align: center;
+    padding: 15px;
+    background-color: rgba(var(--info-message-color-rgb), 0.1);
+    border: 1px solid var(--info-message-color);
+    border-radius: 8px;
+    color: var(--info-message-color);
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Rules Section Grouping - استایل دسته‌بندی قوانین */
+.rule-category-section {
+    margin-bottom: 30px;
+    border: 1px solid var(--panel-border-color);
+    border-radius: 10px;
+    padding: 20px;
+    background-color: var(--card-bg-color);
+    box-shadow: var(--box-shadow);
+}
+
+.rule-category-section h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.3em;
+    color: var(--heading-color);
+    display: flex;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border-color); /* خط چین برای جدا کردن عنوان گروه */
+}
+
+.rule-category-section h3 i {
+    margin-left: 10px; /* فاصله آیکون از متن */
+    font-size: 1.1em;
+    color: var(--primary-color); /* رنگ آیکون گروه */
+}
+
+
+/* Output Section */
+#outputConfig {
+    min-height: 300px;
+    background-color: var(--textarea-bg-color);
+    border: 1px solid var(--textarea-border-color);
+    border-radius: 8px;
+    padding: 15px;
+    font-family: 'Cascadia Code', 'Fira Code', 'monospace';
+    font-size: 0.9em;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: var(--text-color);
+    margin-bottom: 20px;
+}
+
+#downloadConfigBtn {
+    margin-top: 10px;
+    width: auto;
+}
+
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    background-color: var(--panel-bg-color);
+    color: var(--text-color-muted);
+    font-size: 0.9em;
+    border-top: 1px solid var(--panel-border-color);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.03);
+}
+
+/* Scroll Buttons */
+.scroll-btn {
+    position: fixed;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    border: none;
+    box-shadow: var(--box-shadow);
+    font-size: 1.5em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
+    opacity: 0; /* ابتدا پنهان باشند */
+    z-index: 1000; /* روی سایر عناصر */
+}
+
+.scroll-btn:hover {
+    background-color: var(--primary-dark-color);
+    transform: scale(1.1);
+}
+
+#scrollToTopBtn {
+    bottom: 80px; /* بالای دکمه اسکرول به پایین */
+}
+
+#scrollToBottomBtn {
+    bottom: 20px;
+}
+
+/* Custom Select Box - استایل برای تگ select سفارشی */
+.custom-select {
+    width: 100%;
+    padding: 12px 15px;
+    /* margin-bottom: 15px; - این توسط .custom-proxies-section .input-form select مدیریت می‌شود */
+    border: 1px solid var(--input-border-color);
+    border-radius: 5px;
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 0.95em;
+    -webkit-appearance: none; /* حذف فلش پیش‌فرض در کروم/سافاری */
+    -moz-appearance: none;    /* حذف فلش پیش‌فرض در فایرفاکس */
+    appearance: none;         /* حذف فلش پیش‌فرض */
+    /* افزودن فلش سفارشی با SVG */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23333' width='18px' height='18px'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 15px center; /* موقعیت فلش در سمت چپ (برای rtl) */
+    padding-right: 15px; /* ایجاد فضا برای فلش در سمت راست (برای rtl) */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+body.dark-mode .custom-select {
+    /* تغییر رنگ فلش برای حالت شب */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f8f8f2' width='18px' height='18px'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+}
+
+.custom-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.25);
+}
+
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.5em;
+    }
+    main {
+        margin: 20px auto;
+        gap: 20px;
+    }
+    .panel {
+        padding: 20px;
+    }
+    .panel h2 {
+        font-size: 1.3em;
+        margin-bottom: 20px;
+    }
+    .proxy-cards-grid, .rules-grid {
+        grid-template-columns: 1fr;
+    }
+    .custom-proxies-section .input-form {
+        grid-template-columns: 1fr;
+    }
+    .selection-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .scroll-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2em;
+        right: 10px;
+    }
+    #scrollToTopBtn {
+        bottom: 70px;
+    }
+    #scrollToBottomBtn {
+        bottom: 10px;
+    }
+}

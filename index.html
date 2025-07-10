@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سازنده کانفیگ MiHoMo - LANShare</title>
+    <link rel="icon" type="image/svg+xml" href="assets/images/lan-vpn-icon.svg">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1>سازنده کانفیگ MiHoMo</h1>
+        <button id="themeToggleBtn">
+            <i class="fas fa-moon"></i>
+            <span class="sr-only">تغییر تم (شب/روز)</span>
+        </button>
+    </header>
+
+    <main>
+        <section class="lan-ip-section panel">
+            <h2>۱. آدرس IP دستگاه VPN (LAN)</h2>
+            <p class="info-message">
+                لطفاً آدرس IP دستگاهی که VPN روی آن فعال است و به LAN شما متصل است را وارد کنید. (مثال: <code>192.168.1.3</code>)
+                تا زمانی که یک IP معتبر وارد نکنید، سایر گزینه‌ها غیرفعال خواهند بود.
+            </p>
+            <input type="text" id="lanIpInput" placeholder="آدرس IP دستگاه VPN شما (مثال: 192.168.1.3)" dir="ltr">
+            <button id="validateLanIpBtn">تأیید و ادامه</button>
+        </section>
+
+        <div id="mainContentWrapper" class="disabled-content">
+            <section class="predefined-proxies-section panel">
+                <h2>۲. انتخاب سرورهای پیش‌فرض</h2>
+                <div class="selection-controls">
+                    <button id="selectAllPredefinedProxies">انتخاب همه سرورها</button>
+                    <button id="deselectAllPredefinedProxies">لغو انتخاب همه</button>
+                </div>
+                <div id="predefinedProxiesList" class="proxy-cards-grid">
+                    </div>
+            </section>
+
+            <section class="custom-proxies-section panel">
+                <h2>۳. افزودن سرور کاستوم شما (فقط در مرورگرتان ذخیره می‌شود)</h2>
+                <div class="input-form">
+                    <input type="number" id="customPortInput" placeholder="پورت (مثال: 1080)" dir="ltr">
+                    <input type="text" id="customNameInput" placeholder="نام دلخواه (مثال: سرور خصوصی من)" dir="rtl">
+                    <select id="customTypeInput" class="custom-select">
+                        <option value="socks5">SOCKS5</option>
+                        <option value="http">HTTP</option>
+                    </select>
+                    <button id="addCustomProxyBtn">افزودن سرور</button>
+                </div>
+                <div id="customProxiesList" class="proxy-cards-grid">
+                    <p id="noCustomConfigsMessage" class="info-message" style="display: none;">
+                        هنوز سرور کاستومی اضافه نشده است.
+                    </p>
+                </div>
+            </section>
+
+            <section class="rules-section panel">
+                <h2>۴. انتخاب قوانین و تنظیمات کانفیگ</h2>
+                <div class="selection-controls">
+                    <button id="selectAllRules">انتخاب همه قوانین</button>
+                    <button id="deselectAllRules">لغو انتخاب همه قوانین</button>
+                </div>
+                <div id="rulesCheckboxes" class="rules-grid">
+                    </div>
+            </section>
+
+            <section class="output-section panel">
+                <h2>۵. کانفیگ MiHoMo نهایی</h2>
+                <button id="generateConfigBtn">تولید کانفیگ</button>
+                <textarea id="outputConfig" readonly rows="20" placeholder="کانفیگ تولید شده در اینجا نمایش داده خواهد شد..."></textarea>
+                <button id="downloadConfigBtn" style="display: none;">دانلود کانفیگ (config.yaml)</button>
+            </section>
+        </div> </main>
+
+    <footer class="disabled-content">
+        <p>&copy; ۲۰۲۵ ساخته شده با ❤️ برای جامعه اینترنت</p>
+    </footer>
+
+    <button id="scrollToTopBtn" class="scroll-btn" title="برو بالا">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    <button id="scrollToBottomBtn" class="scroll-btn" title="برو پایین">
+        <i class="fas fa-arrow-down"></i>
+    </button>
+
+    <script src="assets/js/predefinedProxies.js"></script>
+    <script src="assets/js/rulesAndGroups.js"></script>
+    <script src="assets/js/script.js"></script>
+</body>
+</html>
