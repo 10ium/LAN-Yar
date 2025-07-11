@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // گام ۲: تولید بخش 'proxies'
         // ------------------------------------------------------------------
         let generatedProxiesYaml = [];
-        document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
+        document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
             const proxyServer = currentLanIp;
@@ -480,13 +480,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // ------------------------------------------------------------------
         let generatedProxyGroupsYaml = [];
         let allActiveProxyNames = new Set(); 
-        document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
+        document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
             allActiveProxyNames.add(checkbox.dataset.name);
         });
         
         // تعریف گروه‌های پایه و گروه‌هایی که باید آخر باشند، قبل از استفاده
         const baseProxyGroupsKeys = ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯'];
-        const specialLastGroupsKeys = ['بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'];
+        const specialLastGroupsKeys = ['بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫']; // **مهم: این خط جابجا شده است**
 
         // جمع‌آوری کلیدهای گروه پروکسی مورد نیاز از Rules فعال و همچنین گروه‌های پایه/خاص
         let requiredPgKeys = new Set();
@@ -498,6 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         baseProxyGroupsKeys.forEach(key => requiredPgKeys.add(key)); // اطمینان از حضور گروه‌های پایه
         specialLastGroupsKeys.forEach(key => requiredPgKeys.add(key)); // اطمینان از حضور گروه‌های خاص پایانی
+
 
         // فیلتر کردن predefinedProxyGroups بر اساس requiredPgKeys
         let sortedRequiredGroups = predefinedProxyGroups.filter(pg => requiredPgKeys.has(pg.yamlKey));
@@ -546,7 +547,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         list.push(proxyRef);
                     }
                 }  
-                else if (allActiveProxies.has(proxyRef) || baseProxyGroupsKeys.includes(proxyRef)) { // بررسی پروکسی‌های فعال یا گروه‌های پایه
+                // اطمینان از اینکه پروکسی/گروه در لیست پروکسی‌های فعال یا گروه‌های پایه است
+                // اینجا از predefinedProxyGroups.some(pg => pg.yamlKey === proxyRef) به baseProxyGroupsKeys.includes(proxyRef) تغییر کرده
+                // تا فقط گروه‌های پایه را که در لیست proxies برخی گروه‌های از پیش تعریف شده هستند، بررسی کند.
+                else if (allActiveProxies.has(proxyRef) || baseProxyGroupsKeys.includes(proxyRef)) { 
                     const formattedProxyName = formatProxyRefAllQuotes(proxyRef);
                     if (!list.includes(formattedProxyName)) {
                         list.push(formattedProxyName);
@@ -561,8 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  list.push(formatProxyRefAllQuotes("بدون فیلترشکن 🛡️"));
                  list.push(formatProxyRefAllQuotes("اجازه ندادن 🚫"));
             }
-
-            // اطمینان از اینکه گروه‌های پایه در لیست proxies گروه‌های موضوعی به درستی اضافه می‌شوند
+            // همچنین اطمینان از اینکه گروه‌های پایه در لیست proxies گروه‌های موضوعی به درستی اضافه می‌شوند.
             // این اطمینان می‌دهد که حتی اگر predefinedProxyGroups.proxies برای یک گروه موضوعی خالی باشد،
             // باز هم fallback به گروه‌های اصلی وجود داشته باشد.
             if (isTopicGroup && !list.includes(formatProxyRefAllQuotes("نوع انتخاب پروکسی 🔀"))) {
@@ -617,11 +620,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // ====================================================================
         let finalConfigOutput = [];
 
-        // اضافه کردن بخش‌های ثابت
-        finalConfigOutput.push(globalSettingsSection);
-        finalConfigOutput.push(dnsSection);
-        finalConfigOutput.push(snifferSection);
-        finalConfigOutput.push(tunSection);
+        // اضافه کردن محتوای کامل تمپلت پایه (شامل global, dns, sniffer, tun, ntp)
+        // **مهم: دیگر از getFullSectionContent استفاده نمی‌کنیم، زیرا تمپلت فقط شامل بخش‌های ثابت است.**
+        finalConfigOutput.push(baseConfigContent.trim()); 
 
         // بخش Rule Providers
         if (generatedRuleProvidersYaml.length > 0) {
@@ -641,10 +642,9 @@ document.addEventListener('DOMContentLoaded', () => {
         finalConfigOutput.push('rules:');
         finalConfigOutput.push(finalRulesList.join('\n'));
 
-        // بخش NTP
-        if (ntpSection) {
-            finalConfigOutput.push(ntpSection);
-        }
+        // بخش NTP (در baseConfigContent شامل می‌شود، اینجا نیازی نیست)
+        // اگر تمپلت شما ntp را شامل نمی‌شد، می‌توانستید آن را جداگانه اضافه کنید.
+        // با رویکرد جدید، baseConfigContent خودش ntp را هم شامل می‌شود.
 
 
         outputConfigTextarea.value = finalConfigOutput.join('\n\n').trim();
