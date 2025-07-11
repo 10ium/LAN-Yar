@@ -138,6 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // پروکسی‌های پیش‌فرض را از predefinedProxies (که باید از جای دیگری تعریف شده باشد، مثلاً global.js) واکشی کنید.
+        // فرض می‌کنیم predefinedProxies در دسترس است.
         predefinedProxies.forEach(proxy => {
             const proxyCard = document.createElement('div');
             proxyCard.className = 'proxy-card';
@@ -359,12 +361,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // در اینجا, id rule و data-attributes رو برای استفاده در تولید کانفیگ قرار میدیم
                 ruleItem.innerHTML = `
                     <input type="checkbox"
-                           id="${rule.id}"
-                           data-rule-string="${rule.ruleString}"
-                           data-type="rule"
-                           ${rule.defaultChecked ? 'checked' : ''}
-                           ${rule.relatedRuleProvider ? `data-related-rp="${rule.relatedRuleProvider}"` : ''}
-                           ${rule.relatedProxyGroup ? `data-related-pg="${rule.relatedProxyGroup}"` : ''}>
+                               id="${rule.id}"
+                               data-rule-string="${rule.ruleString}"
+                               data-type="rule"
+                               ${rule.defaultChecked ? 'checked' : ''}
+                               ${rule.relatedRuleProvider ? `data-related-rp="${rule.relatedRuleProvider}"` : ''}
+                               ${rule.relatedProxyGroup ? `data-related-pg="${rule.relatedProxyGroup}"` : ''}>
                     <label for="${rule.id}">
                         <h4>${rule.name}</h4>
                         <p class="description">${rule.description || ''}</p>
@@ -493,20 +495,112 @@ document.addEventListener('DOMContentLoaded', () => {
         // ----------------------------------------------------
         // تولید بخش 'rules' (فقط Rule های انتخاب شده توسط کاربر)
         // ----------------------------------------------------
-        let finalRulesList = [];
+        const customRuleOrder = [
+            'rule_download_managers_rp',
+            'rule_download_rp',
+            'rule_stremio_rp_full',
+            'rule_ban_program_ad_rp',
+            'rule_ban_ad_rp',
+            'rule_private_tracker_rp',
+            'rule_category_public_tracker_rp',
+            'rule_malware_rp',
+            'rule_phishing_rp',
+            'rule_cryptominers_rp',
+            'rule_warninglist_rp',
+            'rule_ponzi_rp',
+            'rule_liteads_rp',
+            'rule_iran_ads_rp',
+            'rule_persian_blocker_rp',
+            'rule_ads_rp',
+            'rule_ban_easy_list_rp',
+            'rule_twitch_rp',
+            'rule_telegram_process_exe',
+            'rule_telegram_process_android',
+            'rule_telegram_process_web',
+            'rule_telegram_rp',
+            'rule_youtube_rp_full',
+            'rule_youtube_rp',
+            'rule_youtube_music_rp',
+            'rule_instagram_process_android',
+            'rule_instagram_rp',
+            'rule_ai_deepseek',
+            'rule_ai_qwen',
+            'rule_category_ai_rp',
+            'rule_censor_rp_full',
+            'rule_apps_rp',
+            'rule_iran_rp',
+            'rule_arvancloud_rp',
+            'rule_derakcloud_rp',
+            'rule_iranserver_rp',
+            'rule_parspack_rp',
+            'rule_irasn_rp',
+            'rule_ircidr_rp',
+            'rule_ir_rp_full',
+            'rule_category_ir_rp',
+            'rule_whatsapp_rp',
+            'rule_steam_game_rp',
+            'rule_steam_region_check_rp_full',
+            'rule_game_rp_full',
+            'rule_game_download_rp_full',
+            'rule_category_games_rp_full',
+            'rule_xbox_rp_full',
+            'rule_discord_rp_full',
+            'rule_xiaomi_white_list_rp_full',
+            'rule_xiaomi_ads_rp_full',
+            'rule_xiaomi_block_list_rp_full',
+            'rule_windows_rp_full',
+            'rule_cloudflare_rp_full',
+            'rule_github_rp_full',
+            'rule_google_play_process_android_vending',
+            'rule_google_play_process_android_gms',
+            'rule_google_play_rp_full',
+            'rule_google_rp_full',
+            // این Ruleها قبلاً از rulesAndGroups.js حذف شدند
+            'rule_ip_cidr_10_10_34_0',
+            'rule_local_ips_rp',
+            'rule_private_rp',
+            'rule_match_select_proxy_type'
+        ];
+
+        let selectedRules = [];
         let requiredPgKeys = new Set(); // Proxy Group های مورد نیاز بر اساس Rule ها
 
         document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]:checked').forEach(checkbox => {
+            const ruleId = checkbox.id; // برای مرتب‌سازی نیاز به ID داریم
             const ruleString = checkbox.dataset.ruleString;
             const relatedPgKey = checkbox.dataset.relatedPg;
 
-            finalRulesList.push(`  - ${ruleString}`);
+            selectedRules.push({
+                id: ruleId,
+                ruleString: ruleString,
+                relatedPgKey: relatedPgKey
+            });
+
             if (relatedPgKey) {
                 requiredPgKeys.add(relatedPgKey);
             }
         });
 
-        // Rule MATCH همیشه باید آخرین Rule باشد
+        // مرتب‌سازی Ruleهای انتخاب شده بر اساس customRuleOrder
+        selectedRules.sort((a, b) => {
+            const indexA = customRuleOrder.indexOf(a.id);
+            const indexB = customRuleOrder.indexOf(b.id);
+
+            // اگر یک Rule در customRuleOrder نباشد، آن را به انتها بفرست
+            if (indexA === -1 && indexB === -1) return 0;
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+
+            return indexA - indexB;
+        });
+
+        // حالا finalRulesList را از Ruleهای مرتب شده بسازید
+        let finalRulesList = selectedRules.map(rule => `  - ${rule.ruleString}`);
+
+        // اضافه کردن Ruleهای ثابت که در rulesToGenerate نبودند اما در لیست نهایی Ruleها باید باشند.
+        // با توجه به خروجی مورد نظر شما، 'IP-CIDR,10.10.34.0/24,نوع انتخاب پروکسی 🔀'
+        // و 'MATCH,نوع انتخاب پروکسی 🔀' باید همیشه در انتهای لیست Rules باشند.
+        finalRulesList.push(`  - IP-CIDR,10.10.34.0/24,نوع انتخاب پروکسی 🔀`);
         finalRulesList.push(`  - MATCH,نوع انتخاب پروکسی 🔀`);
         requiredPgKeys.add('نوع انتخاب پروکسی 🔀'); // گروه Match همیشه مورد نیاز است
         console.log("Final Rules List:", finalRulesList.join('\n'));
@@ -519,7 +613,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let allActiveProxyNames = new Set(); // نام پروکسی‌های فعال (Mahsang, Clash, ...)
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
-            allActiveProxyNames.add(checkbox.dataset.name);
+            let proxyName = checkbox.dataset.name;
+            // حذف "(LAN)" از انتهای نام پروکسی‌ها
+            if (proxyName.endsWith(' (LAN)')) {
+                proxyName = proxyName.replace(' (LAN)', '');
+            }
+            allActiveProxyNames.add(proxyName);
         });
         console.log("All active proxy names:", Array.from(allActiveProxyNames));
 
@@ -528,29 +627,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const baseProxyGroupsKeys = ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'];
         baseProxyGroupsKeys.forEach(key => requiredPgKeys.add(key));
 
-        // فیلتر کردن و مرتب‌سازی گروه‌ها
-        const specialLastGroupsKeys = ['بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫']; // گروه‌هایی که باید همیشه در انتها باشند
+        // تعریف ترتیب دلخواه برای گروه‌های پروکسی
+        const customProxyGroupOrder = [
+            'نوع انتخاب پروکسی 🔀',
+            'دستی 🤏🏻',
+            'خودکار (بهترین پینگ) 🤖',
+            'پشتیبان (در صورت قطعی) 🧯',
+            'دانلود منیجر 📥',
+            'تلگرام 💬',
+            'یوتیوب ▶️',
+            'گوگل 🌍',
+            'واتس آپ 🟢',
+            'هوش مصنوعی 🤖',
+            'اینستاگرام 📸',
+            'تبلیغات 🆎',
+            'تبلیغات اپ ها 🍃',
+            'رهگیری جهانی 🛑',
+            'سایتای مخرب ⚠️',
+            'استیم 🖥️',
+            'گیم 🎮',
+            'توییچ 📡',
+            'سایتای ایرانی 🇮🇷',
+            'ویندوز 🧊',
+            'کلودفلر ☁️',
+            'گیتهاب 🐙',
+            'دیسکورد 🗣️',
+            'استریمیو 🎬',
+            'سایتای سانسوری 🤬',
+            'بدون فیلترشکن 🛡️', // اینها باید در انتها باشند
+            'قطع اینترنت ⛔',
+            'اجازه ندادن 🚫'
+        ];
 
-        let sortedRequiredGroups = predefinedProxyGroups.filter(pg => requiredPgKeys.has(pg.yamlKey));
+        // فیلتر کردن و مرتب‌سازی گروه‌ها بر اساس ترتیب دلخواه
+        let sortedRequiredGroups = predefinedProxyGroups
+            .filter(pg => requiredPgKeys.has(pg.yamlKey))
+            .sort((a, b) => {
+                const indexA = customProxyGroupOrder.indexOf(a.yamlKey);
+                const indexB = customProxyGroupOrder.indexOf(b.yamlKey);
 
-        // منطق مرتب‌سازی پیشرفته برای گروه‌های پروکسی
-        sortedRequiredGroups.sort((a, b) => {
-            const aIsSpecialLast = specialLastGroupsKeys.includes(a.yamlKey);
-            const bIsSpecialLast = specialLastGroupsKeys.includes(b.yamlKey);
+                // اگر یک گروه در customProxyGroupOrder نباشد، آن را به انتها بفرست
+                if (indexA === -1 && indexB === -1) return 0;
+                if (indexA === -1) return 1;
+                if (indexB === -1) return -1;
 
-            if (a.yamlKey === 'نوع انتخاب پروکسی 🔀') return -1; // "نوع انتخاب پروکسی" همیشه اول
-            if (b.yamlKey === 'نوع انتخاب پروکسی 🔀') return 1;
-
-            if (aIsSpecialLast && !bIsSpecialLast) return 1; // Special last groups go to end
-            if (!aIsSpecialLast && bIsSpecialLast) return -1;
-
-            // اگر هر دو یا هیچکدام خاص نیستند، بر اساس نام الفبایی مرتب کن
-            if (aIsSpecialLast && bIsSpecialLast) {
-                // حفظ ترتیب خاص برای گروه های انتهایی
-                return specialLastGroupsKeys.indexOf(a.yamlKey) - specialLastGroupsKeys.indexOf(b.yamlKey);
-            }
-            return a.yamlKey.localeCompare(b.yamlKey); // مرتب سازی الفبایی برای بقیه
-        });
+                return indexA - indexB;
+            });
         console.log("Sorted required proxy groups:", sortedRequiredGroups.map(g => g.yamlKey));
 
 
@@ -585,36 +707,39 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (pg.yamlKey === 'قطع اینترنت ⛔' || pg.yamlKey === 'اجازه ندادن 🚫') {
                 groupProxiesList.push('REJECT');
             } else if (pg.yamlKey === 'دستی 🤏🏻' || pg.yamlKey === 'خودکار (بهترین پینگ) 🤖' || pg.yamlKey === 'پشتیبان (در صورت قطعی) 🧯') {
-                // برای این گروه‌ها، پروکسی‌های فعال را اضافه می‌کنیم و سپس DIRECT/REJECT (اگر نیاز باشد)
-                // توجه: allActiveProxyNames شامل نام هر دو پروکسی پیش‌فرض و کاستوم فعال است.
-                Array.from(allActiveProxyNames).sort().forEach(proxyName => { // برای اطمینان از ترتیب، مرتب می‌کنیم
+                // برای این گروه‌ها، فقط پروکسی‌های فعال را اضافه می‌کنیم
+                Array.from(allActiveProxyNames).sort().forEach(proxyName => {
                     groupProxiesList.push(formatProxyRef(proxyName));
                 });
-                if (pg.yamlKey !== 'خودکار (بهترین پینگ) 🤖') { // خودکار (بهترین پینگ) نیازی به DIRECT/REJECT در انتهای خود ندارد
-                    groupProxiesList.push('DIRECT');
-                    groupProxiesList.push('REJECT');
-                }
             } else if (pg.yamlKey === 'نوع انتخاب پروکسی 🔀') {
-                // این گروه باید شامل تمامی گروه‌های اصلی باشد به اضافه DIRECT و REJECT و پروکسی‌های فعال
-                const primaryGroups = ['دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'];
-                primaryGroups.forEach(groupName => {
+                // این گروه باید شامل گروه‌های اصلی باشد و DIRECT و REJECT در انتهای خود
+                const desiredOrderForSelectProxyType = [
+                    'خودکار (بهترین پینگ) 🤖',
+                    'پشتیبان (در صورت قطعی) 🧯',
+                    'دستی 🤏🏻',
+                    'قطع اینترنت ⛔',
+                    'بدون فیلترشکن 🛡️'
+                ];
+                desiredOrderForSelectProxyType.forEach(groupName => {
                     if (requiredPgKeys.has(groupName)) { // فقط گروه‌هایی که واقعا نیاز داریم را اضافه کنیم
-                         groupProxiesList.push(formatProxyRef(groupName));
+                        groupProxiesList.push(formatProxyRef(groupName));
                     }
                 });
-                // اضافه کردن پروکسی های فعال (اختیاری، اگر می خواهید مستقیم از اینجا هم انتخاب شوند)
-                // Array.from(allActiveProxyNames).sort().forEach(proxyName => {
-                //     if (!groupProxiesList.includes(formatProxyRef(proxyName))) {
-                //         groupProxiesList.push(formatProxyRef(proxyName));
-                //     }
-                // });
                 groupProxiesList.push('DIRECT');
                 groupProxiesList.push('REJECT');
             } else {
                 // برای سایر گروه‌های موضوعی که از predefinedProxyGroups می‌آیند
+                // proxies این گروه‌ها از predefinedProxyGroups.js میاد
                 const templateProxies = pg.proxies || [];
                 templateProxies.forEach(proxyRef => {
-                    if (allActiveProxyNames.has(proxyRef) || ['DIRECT', 'REJECT'].includes(proxyRef) || requiredPgKeys.has(proxyRef)) {
+                    // نام پروکسی‌ها را تمیز کنیم تا با allActiveProxyNames مقایسه شوند
+                    let cleanedProxyRef = proxyRef;
+                    if (proxyRef.endsWith(' (LAN)')) {
+                        cleanedProxyRef = proxyRef.replace(' (LAN)', '');
+                    }
+
+                    // چک کنیم که آیا پروکسی/گروه مورد نیاز فعال است یا یکی از پروکسی‌های خاص (DIRECT/REJECT) است
+                    if (allActiveProxyNames.has(cleanedProxyRef) || ['DIRECT', 'REJECT'].includes(proxyRef) || requiredPgKeys.has(proxyRef)) {
                         groupProxiesList.push(formatProxyRef(proxyRef));
                     }
                 });
