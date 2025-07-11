@@ -3,7 +3,6 @@
 # بخش‌های proxies، proxy-groups، rule-providers و rules توسط اسکریپت وبسایت بر اساس انتخاب کاربر تولید می‌شوند.
 # نیازی به تغییر دستی این فایل نیست.
 
-# === GLOBAL SETTINGS ===
 global-client-fingerprint: chrome
 port: 7890
 socks-port: 7891
@@ -28,7 +27,6 @@ profile:
   store-selected: true # ذخیره پروکسی انتخاب شده
   store-fake-ip: true # ذخیره Fake IP
 
-# === DNS SETTINGS ===
 dns:
   enable: true
   ipv6: true
@@ -88,7 +86,6 @@ dns:
     - '2a02:6b8::feed:0ff'
     - '2620:fe::fe'
 
-# === SNIFFER SETTINGS ===
 sniffer: # قابلیت Sniffer برای تشخیص نوع ترافیک
   enable: true
   force-dns-mapping: true
@@ -100,7 +97,6 @@ sniffer: # قابلیت Sniffer برای تشخیص نوع ترافیک
     TLS:
       ports: [443, 8443, 2053, 2083, 2087, 2096]
 
-# === TUN SETTINGS ===
 tun: # تنظیمات Tun (برای مسیریابی ترافیک سیستم)
   enable: true
   stack: mixed # هم IPv4 و هم IPv6
@@ -111,30 +107,20 @@ tun: # تنظیمات Tun (برای مسیریابی ترافیک سیستم)
     - "any:53"
     - "tcp://any:53"
 
-# === RULE PROVIDERS SECTION START ===
 rule-providers:
-  # این بخش توسط اسکریپت پر می‌شود.
-# === RULE PROVIDERS SECTION END ===
+{{RULE_PROVIDERS}}
 
-# === PROXIES SECTION START ===
 proxies:
-  # این بخش توسط اسکریپت پر می‌شود.
-# === PROXIES SECTION END ===
+{{PROXIES}}
 
-# === PROXY GROUPS SECTION START ===
 proxy-groups:
-  # این بخش توسط اسکریپت پر می‌شود.
-# === PROXY GROUPS SECTION END ===
+{{PROXY_GROUPS}}
 
-# === RULES SECTION START ===
 rules:
-  # این بخش توسط اسکریپت پر می‌شود.
-# === RULES SECTION END ===
+{{RULES}}
 
-# === NTP SETTINGS START ===
 ntp: # تنظیمات NTP برای همگام‌سازی زمان
   enable: true
   server: "time.apple.com"
   port: 123
   interval: 30
-# === NTP SETTINGS END ===
