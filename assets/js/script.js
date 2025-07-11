@@ -427,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // تولید بخش 'proxies' (بر اساس انتخاب کاربر در UI)
         // ----------------------------------------------------
         let generatedProxiesYaml = [];
-        document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
+        document.querySelectorAll('#predefinedProxiesList input[type="checkbox']:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
             const proxyServer = checkbox.dataset.ip;
@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (relatedPgKey) {
-                requiredPgKeys.add(relatedPgKey);
+                requiredPgKeys.add(relatedPgKey.normalize('NFC').trim()); // Normalize here too
             }
         });
 
@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         finalRulesList.push(`  - IP-CIDR,10.10.34.0/24,نوع انتخاب پروکسی 🔀`);
         finalRulesList.push(`  - MATCH,نوع انتخاب پروکسی 🔀`);
-        requiredPgKeys.add('نوع انتخاب پروکسی 🔀');
+        requiredPgKeys.add('نوع انتخاب پروکسی 🔀'.normalize('NFC').trim()); // Normalize here too
         console.log("Final Rules List:", finalRulesList.join('\n'));
 
 
@@ -557,26 +557,25 @@ document.addEventListener('DOMContentLoaded', () => {
         let allActiveProxyNames = new Set();
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
-            allActiveProxyNames.add(proxyName);
+            allActiveProxyNames.add(proxyName.normalize('NFC').trim()); // Normalize proxy names too
         });
         console.log("All active proxy names:", Array.from(allActiveProxyNames));
 
 
-        const baseProxyGroupsKeys = ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'];
+        const baseProxyGroupsKeys = [
+            'نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯',
+            'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'
+        ].map(key => key.normalize('NFC').trim()); // Normalize base keys once
+
         baseProxyGroupsKeys.forEach(key => requiredPgKeys.add(key));
 
-        // **مهم: اطمینان از اینکه تمامی گروه‌های پروکسی مربوط به قوانین فعال در لیست requiredPgKeys باشند**
-        // این بخش اطمینان می‌دهد که هر گروهی که توسط یک قانون فعال ارجاع شده است،
-        // یا یک گروه پایه است، در لیست نهایی گروه‌های پروکسی تولید شده باشد.
         predefinedProxyGroups.forEach(pg => {
-            // برای اطمینان از صحت مقایسه با کاراکترهای یونیکد، رشته‌ها را عادی‌سازی می‌کنیم.
             const normalizedPgYamlKey = typeof pg.yamlKey === 'string' ? pg.yamlKey.normalize('NFC').trim() : null;
             
-            if (!normalizedPgYamlKey) { // اگر key نامعتبر بود، به آیتم بعدی برو
+            if (!normalizedPgYamlKey) {
                 return; 
             }
 
-            // اطمینان حاصل می‌کنیم که relatedPgKey هم normalize شده است
             const isReferencedByActiveRule = selectedRules.some(rule => {
                 const normalizedRelatedPgKey = typeof rule.relatedPgKey === 'string' ? rule.relatedPgKey.normalize('NFC').trim() : null;
                 return normalizedRelatedPgKey === normalizedPgYamlKey;
@@ -589,8 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // برای عیب‌یابی: لاگ کردن محتوای requiredPgKeys بعد از پر شدن
-        console.log("Required Proxy Groups Keys (before sorting):", Array.from(requiredPgKeys));
+        console.log("Required Proxy Groups Keys (after processing all rules and base groups):", Array.from(requiredPgKeys));
 
 
         const customProxyGroupOrder = [
@@ -601,15 +599,13 @@ document.addEventListener('DOMContentLoaded', () => {
             'سایتای ایرانی 🇮🇷', 'ویندوز 🧊', 'کلودفلر ☁️', 'گیتهاب 🐙', 'دیسکورد 🗣️',
             'استریمیو 🎬', 'سایتای سانسوری 🤬',
             'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'
-        ];
+        ].map(key => key.normalize('NFC').trim()); // Normalize order keys too
 
         // ساخت finalRequiredGroups از predefinedProxyGroups بر اساس requiredPgKeys
         let finalRequiredGroups = [];
-        customProxyGroupOrder.forEach(key => {
-            const normalizedKey = typeof key === 'string' ? key.normalize('NFC').trim() : null;
-
+        customProxyGroupOrder.forEach(normalizedKey => { // Now 'key' is already normalized
             if (normalizedKey && requiredPgKeys.has(normalizedKey)) {
-                // پیدا کردن شیء کامل گروه از predefinedProxyGroups
+                // Find the original object from predefinedProxyGroups
                 const foundPg = predefinedProxyGroups.find(pg => typeof pg.yamlKey === 'string' && pg.yamlKey.normalize('NFC').trim() === normalizedKey);
                 if (foundPg) {
                     finalRequiredGroups.push(foundPg);
@@ -618,8 +614,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         let sortedRequiredGroups = finalRequiredGroups.sort((a, b) => {
-            const indexA = customProxyGroupOrder.indexOf(a.yamlKey);
-            const indexB = customProxyGroupOrder.indexOf(b.yamlKey);
+            const indexA = customProxyGroupOrder.indexOf(a.yamlKey.normalize('NFC').trim()); // Normalize for comparison
+            const indexB = customProxyGroupOrder.indexOf(b.yamlKey.normalize('NFC').trim()); // Normalize for comparison
 
             if (indexA === -1 && indexB === -1) return 0;
             if (indexA === -1) return 1;
@@ -650,24 +646,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const groupProxiesList = [];
 
-            if (pg.yamlKey === 'بدون فیلترشکن 🛡️') {
+            if (pg.yamlKey.normalize('NFC').trim() === 'بدون فیلترشکن 🛡️'.normalize('NFC').trim()) {
                 groupProxiesList.push('DIRECT');
-            } else if (pg.yamlKey === 'قطع اینترنت ⛔' || pg.yamlKey === 'اجازه ندادن 🚫') {
+            } else if (pg.yamlKey.normalize('NFC').trim() === 'قطع اینترنت ⛔'.normalize('NFC').trim() || pg.yamlKey.normalize('NFC').trim() === 'اجازه ندادن 🚫'.normalize('NFC').trim()) {
                 groupProxiesList.push('REJECT');
-            } else if (pg.yamlKey === 'دستی 🤏🏻' || pg.yamlKey === 'خودکار (بهترین پینگ) 🤖' || pg.yamlKey === 'پشتیبان (در صورت قطعی) 🧯') {
+            } else if (['دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯'].map(k => k.normalize('NFC').trim()).includes(pg.yamlKey.normalize('NFC').trim())) {
                 Array.from(allActiveProxyNames).sort().forEach(proxyName => {
                     groupProxiesList.push(formatProxyRef(proxyName));
                 });
-            } else if (pg.yamlKey === 'نوع انتخاب پروکسی 🔀') {
+            } else if (pg.yamlKey.normalize('NFC').trim() === 'نوع انتخاب پروکسی 🔀'.normalize('NFC').trim()) {
                 const desiredOrderForSelectProxyType = [
                     'خودکار (بهترین پینگ) 🤖',
                     'پشتیبان (در صورت قطعی) 🧯',
                     'دستی 🤏🏻',
                     'قطع اینترنت ⛔',
                     'بدون فیلترشکن 🛡️'
-                ];
+                ].map(key => key.normalize('NFC').trim()); // Normalize these names too
+
                 desiredOrderForSelectProxyType.forEach(groupName => {
-                    if (requiredPgKeys.has(groupName.normalize('NFC').trim())) { // normalize groupName here too
+                    if (requiredPgKeys.has(groupName)) {
                         groupProxiesList.push(formatProxyRef(groupName));
                     }
                 });
