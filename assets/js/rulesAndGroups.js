@@ -76,47 +76,47 @@ const predefinedProxyGroups = [
     // گروه‌هایی که به Rule Providers یا Rules دیگر مرتبط هستند.
     // اینها در UI برای انتخاب مستقیم نمایش داده نمی‌شوند.
     // آیکون‌های این بخش برای سازگاری با MiHoMo به URL SVG تغییر یافته‌اند.
-    { id: 'pg_downloader', name: 'دانلود منیجر', yamlKey: 'دانلود منیجر 📥', type: 'select', icon: 'https://www.svgrepo.com/show/475147/download-square.svg', defaultChecked: true,
+    { id: 'pg_downloader', name: 'دانلود منیجر 📥', yamlKey: 'دانلود منیجر 📥', type: 'select', icon: 'https://www.svgrepo.com/show/475147/download-square.svg', defaultChecked: true,
       proxies: ["بدون فیلترشکن 🛡️", "نوع انتخاب پروکسی 🔀", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'Downloads' },
-    { id: 'pg_telegram', name: 'تلگرام', yamlKey: 'تلگرام 💬', type: 'select', icon: 'https://www.svgrepo.com/show/354443/telegram.svg', defaultChecked: true,
+    { id: 'pg_telegram', name: 'تلگرام 💬', yamlKey: 'تلگرام 💬', type: 'select', icon: 'https://www.svgrepo.com/show/354443/telegram.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'Streaming & Social' },
-    { id: 'pg_youtube', name: 'یوتیوب', yamlKey: 'یوتیوب ▶️', type: 'select', icon: 'https://www.svgrepo.com/show/475700/youtube-color.svg', defaultChecked: true,
+    { id: 'pg_youtube', name: 'یوتیوب ▶️', yamlKey: 'یوتیوب ▶️', type: 'select', icon: 'https://www.svgrepo.com/show/475700/youtube-color.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫", "بدون فیلترشکن 🛡️"], group: 'Streaming & Social' },
-    { id: 'pg_google', name: 'گوگل', yamlKey: 'گوگل 🌍', type: 'select', icon: 'https://www.svgrepo.com/show/475656/google-color.svg', defaultChecked: true,
+    { id: 'pg_google', name: 'گوگل 🌍', yamlKey: 'گوگل 🌍', type: 'select', icon: 'https://www.svgrepo.com/show/475656/google-color.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'General Web Services' },
-    { id: 'pg_whatsapp', name: 'واتس آپ', yamlKey: 'واتس آپ 🟢', type: 'select', icon: 'https://upload.wikimedia.org/wikipedia/commons/4/4c/WhatsApp_Logo_green.svg', defaultChecked: true,
+    { id: 'pg_whatsapp', name: 'واتس آپ 🟢', yamlKey: 'واتس آپ 🟢', type: 'select', icon: 'https://upload.wikimedia.org/wikipedia/commons/4/4c/WhatsApp_Logo_green.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫", "بدون فیلترشکن 🛡️"], group: 'Streaming & Social' },
-    { id: 'pg_ai', name: 'هوش مصنوعی', yamlKey: 'هوش مصنوعی 🤖', type: 'select', icon: 'https://www.svgrepo.com/show/306500/openai.svg', defaultChecked: true,
+    { id: 'pg_ai', name: 'هوش مصنوعی 🤖', yamlKey: 'هوش مصنوعی 🤖', type: 'select', icon: 'https://www.svgrepo.com/show/306500/openai.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'General Web Services' },
-    { id: 'pg_instagram', name: 'اینستاگرام', yamlKey: 'اینستاگرام 📸', type: 'select', icon: 'https://www.svgrepo.com/show/452229/instagram-1.svg', defaultChecked: true,
+    { id: 'pg_instagram', name: 'اینستاگرام 📸', yamlKey: 'اینستاگرام 📸', type: 'select', icon: 'https://www.svgrepo.com/show/452229/instagram-1.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫", "بدون فیلترشکن 🛡️"], group: 'Streaming & Social' },
-    { id: 'pg_ads', name: 'تبلیغات', yamlKey: 'تبلیغات 🆎', type: 'select', icon: 'https://www.svgrepo.com/show/336358/ad.svg', defaultChecked: true,
+    { id: 'pg_ads', name: 'تبلیغات 🆎', yamlKey: 'تبلیغات 🆎', type: 'select', icon: 'https://www.svgrepo.com/show/336358/ad.svg', defaultChecked: true,
       proxies: ["اجازه ندادن 🚫", "نوع انتخاب پروکسی 🔀", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "بدون فیلترشکن 🛡️"], group: 'Ads & Tracking' },
-    { id: 'pg_app_ads', name: 'تبلیغات اپ ها', yamlKey: 'تبلیغات اپ ها 🍃', type: 'select', icon: 'https://www.svgrepo.com/show/12172/smartphone-ad.svg', defaultChecked: true,
+    { id: 'pg_app_ads', name: 'تبلیغات اپ ها 🍃', yamlKey: 'تبلیغات اپ ها 🍃', type: 'select', icon: 'https://www.svgrepo.com/show/12172/smartphone-ad.svg', defaultChecked: true,
       proxies: ["اجازه ندادن 🚫", "نوع انتخاب پروکسی 🔀", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "بدون فیلترشکن 🛡️"], group: 'Ads & Tracking' },
-    { id: 'pg_tracking', name: 'رهگیری جهانی', yamlKey: 'رهگیری جهانی 🛑', type: 'select', icon: 'https://www.svgrepo.com/show/298725/tracking-track.svg', defaultChecked: true,
+    { id: 'pg_tracking', name: 'رهگیری جهانی 🛑', yamlKey: 'رهگیری جهانی 🛑', type: 'select', icon: 'https://www.svgrepo.com/show/298725/tracking-track.svg', defaultChecked: true,
       proxies: ["اجازه ندادن 🚫", "نوع انتخاب پروکسی 🔀", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "بدون فیلترشکن 🛡️"], group: 'Ads & Tracking' },
-    { id: 'pg_malicious', name: 'سایتای مخرب', yamlKey: 'سایتای مخرب ⚠️', type: 'select', icon: 'https://www.svgrepo.com/show/381135/cyber-crime-cyber-phishing-fraud-hack-money.svg', defaultChecked: true,
+    { id: 'pg_malicious', name: 'سایتای مخرب ⚠️', yamlKey: 'سایتای مخرب ⚠️', type: 'select', icon: 'https://www.svgrepo.com/show/381135/cyber-crime-cyber-phishing-fraud-hack-money.svg', defaultChecked: true,
       proxies: ["اجازه ندادن 🚫", "نوع انتخاب پروکسی 🔀", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "بدون فیلترشکن 🛡️"], group: 'Security & Control' },
-    { id: 'pg_steam', name: 'استیم', yamlKey: 'استیم 🖥️', type: 'select', icon: 'https://www.svgrepo.com/show/452107/steam.svg', defaultChecked: true,
+    { id: 'pg_steam', name: 'استیم 🖥️', yamlKey: 'استیم 🖥️', type: 'select', icon: 'https://www.svgrepo.com/show/452107/steam.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'Gaming' },
-    { id: 'pg_game', name: 'گیم', yamlKey: 'گیم 🎮', type: 'select', icon: 'https://www.svgrepo.com/show/167729/game-controller.svg', defaultChecked: true,
+    { id: 'pg_game', name: 'گیم 🎮', yamlKey: 'گیم 🎮', type: 'select', icon: 'https://www.svgrepo.com/show/167729/game-controller.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'Gaming' },
-    { id: 'pg_twitch', name: 'توییچ', yamlKey: 'توییچ 📡', type: 'select', icon: 'https://www.svgrepo.com/show/343527/twitch-network-communication-interaction-connection.svg', defaultChecked: true,
+    { id: 'pg_twitch', name: 'توییچ 📡', type: 'select', icon: 'https://www.svgrepo.com/show/343527/twitch-network-communication-interaction-connection.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'Streaming & Social' },
-    { id: 'pg_iranian_sites', name: 'سایتای ایرانی', yamlKey: 'سایتای ایرانی 🇮🇷', type: 'select', icon: 'https://upload.wikimedia.org/wikipedia/commons/3/36/Flag_of_Iran_%28civil%29.svg', defaultChecked: true,
+    { id: 'pg_iranian_sites', name: 'سایتای ایرانی 🇮🇷', yamlKey: 'سایتای ایرانی 🇮🇷', type: 'select', icon: 'https://upload.wikimedia.org/wikipedia/commons/3/36/Flag_of_Iran_%28civil%29.svg', defaultChecked: true,
       proxies: ["بدون فیلترشکن 🛡️", "نوع انتخاب پروکسی 🔀", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'Iranian Services' },
-    { id: 'pg_windows', name: 'ویندوز', yamlKey: 'ویندوز 🧊', type: 'select', icon: 'https://icon.icepanel.io/Technology/svg/Windows-11.svg', defaultChecked: true,
+    { id: 'pg_windows', name: 'ویندوز 🧊', yamlKey: 'ویندوز 🧊', type: 'select', icon: 'https://icon.icepanel.io/Technology/svg/Windows-11.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "اجازه ندادن 🚫", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯"], group: 'Device Specific' },
-    { id: 'pg_cloudflare', name: 'کلودفلر', yamlKey: 'کلودفلر ☁️', type: 'select', icon: 'https://icon.icepanel.io/Technology/svg/Cloudflare.svg', defaultChecked: true,
+    { id: 'pg_cloudflare', name: 'کلودفلر ☁️', yamlKey: 'کلودفلر ☁️', type: 'select', icon: 'https://icon.icepanel.io/Technology/svg/Cloudflare.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'General Web Services' },
-    { id: 'pg_github', name: 'گیتهاب', yamlKey: 'گیتهاب 🐙', type: 'select', icon: 'https://www.svgrepo.com/show/355033/github.svg', defaultChecked: true,
+    { id: 'pg_github', name: 'گیتهاب 🐙', type: 'select', icon: 'https://www.svgrepo.com/show/355033/github.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'General Web Services' },
-    { id: 'pg_discord', name: 'دیسکورد', yamlKey: 'دیسکورد 🗣️', type: 'select', icon: 'https://automatorplugin.com/wp-content/uploads/2024/10/discord-icon.svg', defaultChecked: true,
+    { id: 'pg_discord', name: 'دیسکورد 🗣️', type: 'select', icon: 'https://automatorplugin.com/wp-content/uploads/2024/10/discord-icon.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'Streaming & Social' },
-    { id: 'pg_stremio', name: 'استریمیو', yamlKey: 'استریمیو 🎬', type: 'select', icon: 'https://stremio.github.io/stremio-addon-guide/img/stremio.svg', defaultChecked: true,
+    { id: 'pg_stremio', name: 'استریمیو 🎬', yamlKey: 'استریمیو 🎬', type: 'select', icon: 'https://stremio.github.io/stremio-addon-guide/img/stremio.svg', defaultChecked: true,
       proxies: ["نوع انتخاب پروکسی 🔀", "بدون فیلترشکن 🛡️", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "اجازه ندادن 🚫"], group: 'Streaming & Social' },
-    { id: 'pg_censored_sites', name: 'سایتای سانسوری', yamlKey: 'سایتای سانسوری 🤬', type: 'select', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Censorship.svg/300px-Censorship.svg.png', defaultChecked: true,
+    { id: 'pg_censored_sites', name: 'سایتای سانسوری 🤬', yamlKey: 'سایتای سانسوری 🤬', type: 'select', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Censorship.svg/300px-Censorship.svg.png', defaultChecked: true,
       proxies: ["اجازه ندادن 🚫", "نوع انتخاب پروکسی 🔀", "خودکار (بهترین پینگ) 🤖", "دستی 🤏🏻", "پشتیبان (در صورت قطعی) 🧯", "بدون فیلترشکن 🛡️"], group: 'Security & Control' },
 ];
 
@@ -208,11 +208,8 @@ const rulesToGenerate = [
     { id: 'rule_xiaomi_block_list_rp_full', name: 'شیائومی بلاک‌لیست (RP)', ruleString: 'RULE-SET,xiaomi_block_list,تبلیغات اپ ها 🍃', defaultChecked: true, type: 'rule_set', group: 'Device Specific', description: 'لیست مسدودسازی دامنه‌های شیائومی.', relatedRuleProvider: 'xiaomi_block_list', relatedProxyGroup: 'تبلیغات اپ ها 🍃' },
     { id: 'rule_windows_rp_full', name: 'ویندوز (RP)', ruleString: 'RULE-SET,windows,ویندوز 🧊', defaultChecked: true, type: 'rule_set', group: 'Device Specific', description: 'قوانین مسیریابی برای ترافیک مربوط به ویندوز.', relatedRuleProvider: 'windows', relatedProxyGroup: 'ویندوز 🧊' },
 
-
-    // گروه: منطق اصلی (این‌ها در UI نمایش داده نمی‌شوند، اما برای تولید کانفیگ لازمند)
-    // این Rule ها نیازی به relatedRuleProvider ندارند چون RULE-SET نیستند
-    { id: 'rule_ip_cidr_10_10_34_0', name: 'IP CIDR 10.10.34.0/24', ruleString: 'IP-CIDR,10.10.34.0/24,نوع انتخاب پروکسی 🔀', defaultChecked: true, type: 'ip_cidr', group: 'Core Logic', hidden: true, description: 'قانون داخلی برای مسیریابی IPهای خاص.', relatedProxyGroup: 'نوع انتخاب پروکسی 🔀' },
-    { id: 'rule_match_select_proxy_type', name: 'MATCH (نوع انتخاب پروکسی)', ruleString: 'MATCH,نوع انتخاب پروکسی 🔀', defaultChecked: true, type: 'match', group: 'Core Logic', hidden: true, description: 'قانون نهایی برای مسیریابی ترافیک باقی‌مانده.', relatedProxyGroup: 'نوع انتخاب پروکسی 🔀' },
+    // قوانین Core Logic که در UI نمایش داده نمی‌شوند، حذف شدند.
+    // اینها باید مستقیماً در تولید finalRulesList اضافه شوند.
 ];
 
 // دسته‌بندی‌ها برای نمایش در UI
