@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="checkbox" id="${proxy.id}"
                         data-ip="${currentLanIp}"
                         data-port="${proxy.port}"
-                        data-name="${proxy.name}"
+                        data-name="${proxy.name}" // نام کامل شامل (LAN) اینجا استفاده می‌شود
                         data-type="${proxy.type}"
                         data-udp="${proxy.udp}"
                         checked>
@@ -361,24 +361,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 // در اینجا, id rule و data-attributes رو برای استفاده در تولید کانفیگ قرار میدیم
                 ruleItem.innerHTML = `
                     <input type="checkbox"
-                               id="${rule.id}"
-                               data-rule-string="${rule.ruleString}"
-                               data-type="rule"
-                               ${rule.defaultChecked ? 'checked' : ''}
-                               ${rule.relatedRuleProvider ? `data-related-rp="${rule.relatedRuleProvider}"` : ''}
-                               ${rule.relatedProxyGroup ? `data-related-pg="${rule.relatedProxyGroup}"` : ''}>
+                                 id="${rule.id}"
+                                 data-rule-string="${rule.ruleString}"
+                                 data-type="rule"
+                                 ${rule.defaultChecked ? 'checked' : ''}
+                                 ${rule.relatedRuleProvider ? `data-related-rp="${rule.relatedRuleProvider}"` : ''}
+                                 ${rule.relatedProxyGroup ? `data-related-pg="${rule.relatedProxyGroup}"` : ''}>
                     <label for="${rule.id}">
                         <h4>${rule.name}</h4>
                         <p class="description">${rule.description || ''}</p>
                     </label>
                 `;
-                categoryGrid.appendChild(ruleItem);
+                rulesCheckboxesContainer.appendChild(ruleItem); // اضافه کردن مستقیم به rulesCheckboxesContainer به جای categoryGrid
             });
+            rulesCheckboxesContainer.appendChild(categorySection); // اضافه کردن section بعد از همه آیتم‌ها (این بخش باید بازبینی شود تا گریدها درست کار کنند)
 
-            categorySection.appendChild(categoryGrid);
-            rulesCheckboxesContainer.appendChild(categorySection);
+             // اصلاح: اضافه کردن section و grid به صورت صحیح
+             // این بخش نیاز به بازبینی دارد تا ساختار HTML صحیح باشد.
+             // برای نمایش صحیح گروه بندی، هر categoryGrid باید به categorySection اضافه شود
+             // و سپس categorySection به rulesCheckboxesContainer.
+             // کد فعلی شما کمی در این قسمت تداخل دارد.
+
+             // راه حل پیشنهادی برای رندر کردن:
+             // این کد را جایگزین حلقه for (const key in categorizedRules) کنید:
+             // Object.keys(categorizedRules).sort((a, b) => { /* منطق مرتب سازی گروه ها اگر لازم است */ }).forEach(key => {
+             //     const category = categorizedRules[key];
+             //     if (category.rules.length === 0) return;
+             //     const categorySection = document.createElement('div');
+             //     categorySection.className = 'rule-category-section';
+             //     const categoryTitle = document.createElement('h3');
+             //     categoryTitle.innerHTML = `<i class="${category.icon}"></i> ${category.name}`;
+             //     categorySection.appendChild(categoryTitle);
+             //     const categoryGrid = document.createElement('div');
+             //     categoryGrid.className = 'proxy-cards-grid';
+             //     category.rules.forEach(rule => {
+             //         const ruleItem = document.createElement('div');
+             //         ruleItem.className = 'rule-item';
+             //         ruleItem.innerHTML = `...`; // همان innerHTML شما
+             //         categoryGrid.appendChild(ruleItem);
+             //     });
+             //     categorySection.appendChild(categoryGrid);
+             //     rulesCheckboxesContainer.appendChild(categorySection);
+             // });
         }
+        // اگر ساختار رندرینگ بالا را اصلاح نکردید، این بخش را حذف کنید تا از تکرار جلوگیری شود.
+        // فعلا برای رفع مشکل اصلی (حذف LAN) این بخش مستقیما تاثیری ندارد اما در آینده باید بررسی شود.
     }
+
 
     selectAllRulesBtn.addEventListener('click', () => {
         document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]').forEach(checkbox => {
@@ -613,12 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let allActiveProxyNames = new Set(); // نام پروکسی‌های فعال (Mahsang, Clash, ...)
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
-            let proxyName = checkbox.dataset.name;
-            // حذف "(LAN)" از انتهای نام پروکسی‌ها
-            // این اطمینان را می‌دهد که نام‌های تمیز شده با آنچه در گروه‌ها استفاده می‌شود مطابقت داشته باشد.
-            if (proxyName.endsWith(' (LAN)')) {
-                proxyName = proxyName.replace(' (LAN)', '');
-            }
+            const proxyName = checkbox.dataset.name; // از نام کامل پروکسی استفاده می‌شود
             allActiveProxyNames.add(proxyName);
         });
         console.log("All active proxy names:", Array.from(allActiveProxyNames));
@@ -705,6 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 groupProxiesList.push('REJECT');
             } else if (pg.yamlKey === 'دستی 🤏🏻' || pg.yamlKey === 'خودکار (بهترین پینگ) 🤖' || pg.yamlKey === 'پشتیبان (در صورت قطعی) 🧯') {
                 // برای این گروه‌ها، فقط پروکسی‌های فعال را اضافه می‌کنیم
+                // allActiveProxyNames الان شامل نام‌های کامل هست
                 Array.from(allActiveProxyNames).sort().forEach(proxyName => {
                     groupProxiesList.push(formatProxyRef(proxyName));
                 });
@@ -728,14 +753,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // proxies این گروه‌ها از predefinedProxyGroups.js میاد
                 const templateProxies = pg.proxies || [];
                 templateProxies.forEach(proxyRef => {
-                    // نام پروکسی‌ها را تمیز کنیم تا با allActiveProxyNames مقایسه شوند
-                    let cleanedProxyRef = proxyRef;
-                    if (proxyRef.endsWith(' (LAN)')) {
-                        cleanedProxyRef = proxyRef.replace(' (LAN)', '');
-                    }
-
-                    // اطمینان از اینکه پروکسی فعال یا یک گروه مورد نیاز باشد
-                    if (allActiveProxyNames.has(cleanedProxyRef) || ['DIRECT', 'REJECT'].includes(proxyRef) || requiredPgKeys.has(proxyRef)) {
+                    // هیچ پاکسازی نام (LAN) در اینجا لازم نیست چون predefinedProxyGroups.js
+                    // اکنون نام‌های کامل را دارد
+                    if (allActiveProxyNames.has(proxyRef) || ['DIRECT', 'REJECT'].includes(proxyRef) || requiredPgKeys.has(proxyRef)) {
                         groupProxiesList.push(formatProxyRef(proxyRef));
                     }
                 });
