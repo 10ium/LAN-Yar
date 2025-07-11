@@ -412,9 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadConfigBtn = document.getElementById('downloadConfigBtn');
 
     generateConfigBtn.addEventListener('click', async () => {
-        // --- اضافه شده برای نمایش انیمیشن لودینگ ---
         showLoading('در حال تولید کانفیگ... لطفاً صبر کنید.'); 
-        // ---------------------------------------------
         outputConfigTextarea.value = '';
         downloadConfigBtn.style.display = 'none';
 
@@ -422,9 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('لطفاً ابتدا آدرس IP دستگاه VPN (LAN) را در بخش ۱ وارد و تأیید کنید.');
             outputConfigTextarea.value = '';
             lanIpInput.focus();
-            // --- اضافه شده برای پنهان کردن انیمیشن در صورت خطا ---
             hideLoading(); 
-            // ----------------------------------------------------
             return;
         }
 
@@ -442,34 +438,38 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             alert(`خطا در بارگذاری تمپلت پیش‌فرض: ${error.message}`);
             outputConfigTextarea.value = '';
-            // --- اضافه شده برای پنهان کردن انیمیشن در صورت خطا ---
             hideLoading(); 
-            // ----------------------------------------------------
             return;
         }
 
         // ----------------------------------------------------
         // استخراج بخش‌های اصلی کانفیگ از تمپلت پایه با RegEx
         // ----------------------------------------------------
-        const ruleProvidersSectionMatch = baseConfigContent.match(/^rule-providers:([\s\S]*?)(?=^proxies:|^proxy-groups:|^rules:|^ntp:|$)/m);
-        const proxiesSectionMatch = baseConfigContent.match(/^proxies:([\s\S]*?)(?=^proxy-groups:|^rule-providers:|^rules:|^ntp:|$)/m);
-        const proxyGroupsSectionMatch = baseConfigContent.match(/^proxy-groups:([\s\S]*?)(?=^rules:|^rule-providers:|^proxies:|^ntp:|$)/m);
-        const rulesSectionMatch = baseConfigContent.match(/^rules:([\s\S]*?)(?=^ntp:|$)/m);
+        // استفاده از یک RegEx کلی‌تر برای گرفتن بخش بالا تا اولین بخش اصلی.
+        // این RegEx به دنبال "کلید: (space)" می‌گرده تا شروع یک بخش جدید رو تشخیص بده.
+        const ruleProvidersSectionMatch = baseConfigContent.match(/^rule-providers:([\s\S]*?)(?=^\w+:|$)/m);
+        const proxiesSectionMatch = baseConfigContent.match(/^proxies:([\s\S]*?)(?=^\w+:|$)/m);
+        const proxyGroupsSectionMatch = baseConfigContent.match(/^proxy-groups:([\s\S]*?)(?=^\w+:|$)/m);
+        const rulesSectionMatch = baseConfigContent.match(/^rules:([\s\S]*?)(?=^\w+:|$)/m);
         const ntpSectionMatch = baseConfigContent.match(/^ntp:([\s\S]*?)$/m);
 
+
         let topSectionContent = '';
-        const firstMajorSectionIndex = Math.min(
+        // یافتن ایندکس اولین بخش اصلی برای استخراج قسمت بالا
+        const sectionsStartIndices = [
             ruleProvidersSectionMatch ? ruleProvidersSectionMatch.index : Infinity,
             proxiesSectionMatch ? proxiesSectionMatch.index : Infinity,
             proxyGroupsSectionMatch ? proxyGroupsSectionMatch.index : Infinity,
             rulesSectionMatch ? rulesSectionMatch.index : Infinity,
             ntpSectionMatch ? ntpSectionMatch.index : Infinity
-        );
+        ].filter(index => index !== Infinity); // فیلتر کردن Infinity
+
+        const firstMajorSectionIndex = sectionsStartIndices.length > 0 ? Math.min(...sectionsStartIndices) : Infinity;
 
         if (firstMajorSectionIndex !== Infinity) {
             topSectionContent = baseConfigContent.substring(0, firstMajorSectionIndex);
         } else {
-            topSectionContent = baseConfigContent;
+            topSectionContent = baseConfigContent; // اگر هیچ بخش اصلی پیدا نشد، کل محتوا را بخش بالا در نظر می‌گیریم
         }
 
         let bottomSectionContent = ntpSectionMatch ? ntpSectionMatch[0] : '';
@@ -482,10 +482,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
-            const proxyServer = checkbox.dataset.ip;
+            // !!! اصلاح مهم: استفاده از currentLanIp به عنوان سرور !!!
+            const proxyServer = currentLanIp; // یا checkbox.dataset.ip
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp;
 
+            // اصلاح تو رفتگی و چسبیدگی خطوط
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
             if (proxyType === 'socks5' || proxyType === 'http') {
                 proxyYaml += `\n    udp: ${proxyUdp}`;
@@ -496,10 +498,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
-            const proxyServer = checkbox.dataset.ip;
+            // !!! اصلاح مهم: استفاده از currentLanIp به عنوان سرور !!!
+            const proxyServer = currentLanIp; // یا checkbox.dataset.ip
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp;
 
+            // اصلاح تو رفتگی و چسبیدگی خطوط
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
             if (proxyType === 'socks5' || proxyType === 'http') {
                 proxyYaml += `\n    udp: ${proxyUdp}`;
@@ -508,11 +512,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (generatedProxiesYaml.length === 0) {
-            generatedProxiesYaml.push(`
-  - name: "DIRECT"
-    type: direct
-  - name: "REJECT"
-    type: reject`);
+            // این حالت نباید پیش بیاد اگر DIRECT و REJECT همیشه اضافه میشن، اما برای اطمینان نگه می‌داریم
+            generatedProxiesYaml.push(`  - name: "DIRECT"\n    type: direct\n  - name: "REJECT"\n    type: reject`);
         }
 
         // ----------------------------------------------------
@@ -526,12 +527,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         predefinedRuleProviders.forEach(rp => {
             if (selectedRpKeys.has(rp.yamlKey)) {
+                // اصلاح تو رفتگی
                 generatedRuleProvidersYaml.push(`  ${rp.yamlKey}:
     type: http
     behavior: ${rp.behavior}
     url: ${rp.url}
     interval: 86400
-    path: ./ruleset/${rp.yamlKey}.yaml`);
+    path: ./ruleset/${rp.yamlKey}.yaml`); // path اینجا دیگه در rulesAndGroups.js اصلاح شده
             }
         });
 
@@ -563,6 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (isRelatedRpActive) {
+                // اصلاح تو رفتگی
                 finalRulesList.push(`  - ${rule.ruleString}`);
             }
         });
@@ -576,16 +579,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             activeProxyNames.add(checkbox.dataset.name);
         });
+        
+        // DIRECT و REJECT همیشه باید در لیست پروکسی‌های فعال باشند، حتی اگر پروکسی دیگری نباشد
         activeProxyNames.add('DIRECT');
         activeProxyNames.add('REJECT');
 
         let finalProxyGroupsToInclude = new Set();
 
+        // گروه‌های پایه همیشه شامل شوند
         const baseProxyGroups = predefinedProxyGroups.filter(pg =>
             ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'].includes(pg.yamlKey)
         );
         baseProxyGroups.forEach(pg => finalProxyGroupsToInclude.add(pg.yamlKey));
 
+        // گروه‌هایی که توسط قوانین انتخاب شده‌اند
         finalRulesList.forEach(ruleString => {
             const ruleTargetGroupMatch = ruleString.match(/,([^,]+)$/);
             if (ruleTargetGroupMatch) {
@@ -596,6 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let sortedActiveGroups = predefinedProxyGroups.filter(pg => finalProxyGroupsToInclude.has(pg.yamlKey));
 
+        // اطمینان از اینکه "نوع انتخاب پروکسی" همیشه اول باشه
         sortedActiveGroups.sort((a, b) => {
             if (a.yamlKey === 'نوع انتخاب پروکسی 🔀') return -1;
             if (b.yamlKey === 'نوع انتخاب پروکسی 🔀') return 1;
@@ -604,6 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         sortedActiveGroups.forEach(pg => {
+            // اصلاح تو رفتگی
             let groupContent = `  - name: "${pg.yamlKey}"\n    type: ${pg.type}`;
             if (pg.icon) groupContent += `\n    icon: ${pg.icon}`;
             if (pg.url) groupContent += `\n    url: ${pg.url}`;
@@ -616,26 +625,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
             groupContent += `\n    proxies:`;
 
-            if (['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯'].includes(pg.yamlKey)) {
+            // منطق جدید برای پر کردن لیست proxies در گروه‌ها
+            // گروه‌های اصلی که باید شامل DIRECT, REJECT و تمام پروکسی‌های فعال باشند
+            const coreSelectGroups = ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯'];
+            if (coreSelectGroups.includes(pg.yamlKey)) {
+                // ابتدا DIRECT و REJECT
                 groupContent += `\n      - DIRECT\n      - REJECT`;
+                // سپس پروکسی‌های فعال کاربر
                 activeProxyNames.forEach(name => {
-                    if (name !== 'DIRECT' && name !== 'REJECT') {
+                    if (name !== 'DIRECT' && name !== 'REJECT') { // مطمئن میشیم DIRECT و REJECT تکرار نشن
                         groupContent += `\n      - "${name}"`;
                     }
                 });
-            } else if (pg.proxies && pg.proxies.length > 0) {
-                const filteredProxiesForGroup = pg.proxies.filter(pName => activeProxyNames.has(pName) || pName === 'DIRECT' || pName === 'REJECT');
-                filteredProxiesForGroup.forEach(p => {
-                    groupContent += `\n      - ${p}`;
-                });
-                if (filteredProxiesForGroup.length === 0 && pg.type !== 'reject' && pg.type !== 'direct') {
-                    groupContent += `\n      - DIRECT\n      - REJECT`;
-                }
-
+            } else if (pg.yamlKey === 'بدون فیلترشکن 🛡️') {
+                groupContent += `\n      - DIRECT`;
+            } else if (pg.yamlKey === 'قطع اینترنت ⛔' || pg.yamlKey === 'اجازه ندادن 🚫') {
+                groupContent += `\n      - REJECT`;
             } else {
-                if (pg.type !== 'reject' && pg.type !== 'direct') {
-                    groupContent += `\n      - DIRECT\n      - REJECT`;
+                // برای گروه‌های موضوعی (مثلاً تلگرام، یوتیوب، تبلیغات و ...)
+                // باید گزینه‌هایی برای انتخاب بین گروه اصلی، بدون فیلترشکن، و اجازه ندادن داشته باشن
+                // همچنین اگر پروکسی‌های فعال خاصی برای این گروه تعریف شده، آن را هم اضافه کنیم (مانند نمونه اصلی شما)
+                const groupSpecificProxies = pg.proxies || []; // از predefinedProxyGroups.js میاد
+                
+                // مطمئن میشیم گزینه "نوع انتخاب پروکسی" همیشه باشه مگر اینکه خودش باشه
+                if (pg.yamlKey !== 'نوع انتخاب پروکسی 🔀') {
+                    if (!groupSpecificProxies.includes('نوع انتخاب پروکسی 🔀')) {
+                         groupContent += `\n      - "نوع انتخاب پروکسی 🔀"`;
+                    }
                 }
+                
+                // اضافه کردن بقیه پروکسی‌ها/گروه‌ها با توجه به اولویت و عدم تکرار
+                const defaultOptionsForTopicGroups = ["بدون فیلترشکن 🛡️", "اجازه ندادن 🚫"];
+                
+                groupSpecificProxies.forEach(p => {
+                    // فقط اگر این پروکسی/گروه در لیست پیش‌فرض گروه هست و تکراری نیست
+                    if (p !== 'نوع انتخاب پروکسی 🔀' && !defaultOptionsForTopicGroups.includes(p)) {
+                        groupContent += `\n      - "${p}"`;
+                    }
+                });
+
+                defaultOptionsForTopicGroups.forEach(option => {
+                    if (!groupSpecificProxies.includes(option)) {
+                        groupContent += `\n      - "${option}"`;
+                    }
+                });
             }
             generatedProxyGroupsYaml.push(groupContent);
         });
@@ -646,6 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ====================================================================
         let finalConfigOutput = [];
 
+        // اصلاح: حذف فضای خالی اضافی در ابتدای topSectionContent
         if (topSectionContent.trim()) {
             finalConfigOutput.push(topSectionContent.trim());
         }
@@ -656,7 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         finalConfigOutput.push('proxies:');
-        finalConfigOutput.push(generatedProxiesYaml.join(''));
+        finalConfigOutput.push(generatedProxiesYaml.join('\n\n')); // اضافه کردن دو خط جدید بین پروکسی‌ها
 
         finalConfigOutput.push('proxy-groups:');
         finalConfigOutput.push(generatedProxyGroupsYaml.join('\n'));
@@ -675,9 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         outputConfigTextarea.value = finalConfigOutput.join('\n\n').trim();
         downloadConfigBtn.style.display = 'block';
-        // --- اضافه شده برای پنهان کردن انیمیشن پس از اتمام تولید ---
         hideLoading(); 
-        // --------------------------------------------------------
     });
 
 
@@ -746,7 +778,5 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCustomProxies();
     renderRulesAndProviders();
 
-    // --- اضافه شده برای پنهان کردن انیمیشن بارگذاری اولیه پس از اتمام بارگذاری و رندر اولیه ---
     hideLoading(); 
-    // ---------------------------------------------------------------------------------------
 });
