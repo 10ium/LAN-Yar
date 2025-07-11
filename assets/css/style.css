@@ -9,6 +9,7 @@
 /* تعریف متغیرهای CSS برای رنگ‌ها و سایه‌ها در حالت روشن (پیش‌فرض) */
 :root {
     --background-color: #f0f2f5;
+    --background-color-darker: #e0e2e5; /* رنگ کمی تیره‌تر برای پس‌زمینه لودینگ */
     --text-color: #333;
     --heading-color: #222;
     --text-color-light: #555;
@@ -36,6 +37,7 @@
 /* تعریف متغیرهای CSS برای رنگ‌ها و سایه‌ها در حالت تاریک (dark-mode) */
 body.dark-mode {
     --background-color: #282c34;
+    --background-color-darker: #22262c; /* رنگ کمی تیره‌تر برای پس‌زمینه لودینگ در دارک مود */
     --text-color: #f8f8f2;
     --heading-color: #e0e0e0;
     --text-color-light: #cccccc;
@@ -555,6 +557,50 @@ body.dark-mode .custom-select {
     box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.25);
 }
 
+
+/* انیمیشن بارگذاری (جدید) */
+#loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-color-darker); /* استفاده از متغیر تم */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* مطمئن می‌شویم که روی بقیه عناصر باشد */
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0.3s ease; /* انیمیشن نرم برای ظاهر و ناپدید شدن */
+}
+
+#loadingOverlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.spinner {
+    border: 8px solid var(--border-color); /* رنگ اصلی اسپینر */
+    border-top: 8px solid var(--primary-color); /* رنگ متحرک اسپینر */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite; /* انیمیشن چرخشی */
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#loadingMessage {
+    color: var(--text-color);
+    font-size: 1.2em;
+    font-weight: bold;
+}
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
