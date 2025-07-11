@@ -443,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp;
 
+            // اطمینان از اینکه نام پروکسی‌ها بین " " قرار گیرند.
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
             if (proxyType === 'socks5' || proxyType === 'http') {
                 proxyYaml += `\n    udp: ${proxyUdp}`;
@@ -457,6 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp;
 
+            // اطمینان از اینکه نام پروکسی‌ها بین " " قرار گیرند.
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
             if (proxyType === 'socks5' || proxyType === 'http') {
                 proxyYaml += `\n    udp: ${proxyUdp}`;
@@ -534,7 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'rule_iranserver_rp',
             'rule_parspack_rp',
             'rule_irasn_rp',
-            'rule_ircidr_rp',
+            'rule_ircidr', // این احتمالاً باید ipcidr باشد، نه iras_rp
             'rule_ir_rp_full',
             'rule_category_ir_rp',
             'rule_whatsapp_rp',
@@ -555,11 +557,9 @@ document.addEventListener('DOMContentLoaded', () => {
             'rule_google_play_process_android_gms',
             'rule_google_play_rp_full',
             'rule_google_rp_full',
-            // این Ruleها قبلاً از rulesAndGroups.js حذف شدند
-            'rule_ip_cidr_10_10_34_0',
             'rule_local_ips_rp',
-            'rule_private_rp',
-            'rule_match_select_proxy_type'
+            'rule_private_rp'
+            // IP-CIDR و MATCH به صورت دستی در انتها اضافه می‌شوند
         ];
 
         let selectedRules = [];
@@ -615,6 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             let proxyName = checkbox.dataset.name;
             // حذف "(LAN)" از انتهای نام پروکسی‌ها
+            // این اطمینان را می‌دهد که نام‌های تمیز شده با آنچه در گروه‌ها استفاده می‌شود مطابقت داشته باشد.
             if (proxyName.endsWith(' (LAN)')) {
                 proxyName = proxyName.replace(' (LAN)', '');
             }
@@ -677,12 +678,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         const formatProxyRef = (name) => {
-            // فقط نام‌هایی که شامل کاراکترهای خاص (مثل فاصله، پرانتز) یا ایموجی هستند، نیاز به کوتیشن دارند.
-            // نام‌های ساده‌تر (مثل DIRECT, REJECT) نیازی به کوتیشن ندارند.
-            if (name.includes(' ') || name.includes('(') || name.includes(')') || name.match(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F900}-\u{1F9FF}\u{1F000}-\u{1F02F}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u)) {
-                return `"${name}"`;
-            }
-            return name;
+            // تمامی نام‌ها را بین " " قرار می‌دهد
+            return `"${name}"`;
         };
 
 
@@ -712,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     groupProxiesList.push(formatProxyRef(proxyName));
                 });
             } else if (pg.yamlKey === 'نوع انتخاب پروکسی 🔀') {
-                // این گروه باید شامل گروه‌های اصلی باشد و DIRECT و REJECT در انتهای خود
+                // این گروه باید شامل گروه‌های اصلی باشد، اما بدون DIRECT و REJECT در انتهای خود
                 const desiredOrderForSelectProxyType = [
                     'خودکار (بهترین پینگ) 🤖',
                     'پشتیبان (در صورت قطعی) 🧯',
@@ -725,8 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         groupProxiesList.push(formatProxyRef(groupName));
                     }
                 });
-                groupProxiesList.push('DIRECT');
-                groupProxiesList.push('REJECT');
+                // DIRECT و REJECT اینجا اضافه نمی‌شوند طبق درخواست شما
             } else {
                 // برای سایر گروه‌های موضوعی که از predefinedProxyGroups می‌آیند
                 // proxies این گروه‌ها از predefinedProxyGroups.js میاد
@@ -738,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         cleanedProxyRef = proxyRef.replace(' (LAN)', '');
                     }
 
-                    // چک کنیم که آیا پروکسی/گروه مورد نیاز فعال است یا یکی از پروکسی‌های خاص (DIRECT/REJECT) است
+                    // اطمینان از اینکه پروکسی فعال یا یک گروه مورد نیاز باشد
                     if (allActiveProxyNames.has(cleanedProxyRef) || ['DIRECT', 'REJECT'].includes(proxyRef) || requiredPgKeys.has(proxyRef)) {
                         groupProxiesList.push(formatProxyRef(proxyRef));
                     }
