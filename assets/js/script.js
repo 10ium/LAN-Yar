@@ -428,41 +428,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- اصلاح خطای SyntaxError و بهبود RegEx استخراج بخش‌های ثابت (نهایی) ---
-        // این تابع حالا هر بلوک YAML رو از عنوانش تا شروع بلوک بعدی یا انتهای فایل می‌گیره
-        const getFullSectionByMarkers = (startMarker, endMarker, content) => {
-            // Regex برای گرفتن خط شروع مارکر و تمام خطوط بعد از اون تا مارکر پایان یا انتهای فایل
-            // این RegEx از گروه نامگذاری شده برای گرفتن محتوا و همچنین پرچم 'u' برای یونیکد استفاده می‌کند
-            // بهبود داده شد تا خط خالی بعد از مارکر شروع را نادیده بگیرد
-            const regex = new RegExp(`(^#\\s*${startMarker}\\s*$(?:\\r\\n|\\n)?)([\\s\\S]*?)(?=(?:^#\\s*${endMarker}\\s*$|^#\\s*={10,}.*$))`, 'mu');
-            const match = content.match(regex);
-            
-            if (match && match[1]) { 
-                // match[1] شامل خط مارکر شروع (مثلاً # === GLOBAL SETTINGS ===) و یک Newline بعد از اونه
-                // match[2] شامل محتوای داخل بلوک هست
-                return match[1].trim() + (match[2] ? '\n' + match[2].trim() : ''); // اضافه کردن یک newline قبل از محتوا برای فرمت صحیح
-            }
-            return ''; 
-        };
-
-        // استفاده از نشانگرهای جدید برای استخراج دقیق
-        const globalSettingsSection = getFullSectionByMarkers('=== GLOBAL SETTINGS ===', '=== DNS SETTINGS ===', baseConfigContent);
-        const dnsSection = getFullSectionByMarkers('=== DNS SETTINGS ===', '=== SNIFFER SETTINGS ===', baseConfigContent);
-        const snifferSection = getFullSectionByMarkers('=== SNIFFER SETTINGS ===', '=== TUN SETTINGS ===', baseConfigContent);
-        const tunSection = getFullSectionByMarkers('=== TUN SETTINGS ===', '=== RULE PROVIDERS SECTION START ===', baseConfigContent);
-        const ntpSection = getFullSectionByMarkers('=== NTP SETTINGS START ===', '=== NTP SETTINGS END ===', baseConfigContent);
-        
-        // --- End of: اصلاح خطای SyntaxError و بهبود RegEx استخراج بخش‌های ثابت ---
-
+        // --- رویکرد جدید: استخراج بخش‌ها با استفاده از split و جایگزین‌کننده‌ها ---
+        // این رویکرد فرض می‌کند که شما فایل default-mihomo-template.yaml را مطابق دستورالعمل مرحله ۱ (با {{PLACEHOLDER}} ها) به‌روز کرده‌اید.
+        let processedConfigContent = baseConfigContent;
 
         // ----------------------------------------------------
-        // تولید بخش 'proxies' (بر اساس انتخاب کاربر در UI)
+        // تولید بخش 'proxies'
         // ----------------------------------------------------
         let generatedProxiesYaml = [];
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
-            const proxyServer = currentLanIp; // استفاده از currentLanIp
+            const proxyServer = currentLanIp; 
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp;
 
@@ -476,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
-            const proxyServer = currentLanIp; // استفاده از currentLanIp
+            const proxyServer = currentLanIp; 
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp;
 
@@ -486,6 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             generatedProxiesYaml.push(proxyYaml);
         });
+        processedConfigContent = processedConfigContent.replace('{{PROXIES}}', generatedProxiesYaml.join('\n\n'));
         
         // ----------------------------------------------------
         // تولید بخش 'rule-providers' (همه‌ی آن‌ها را شامل می‌شود - طبق درخواست "دو رو نمی‌خوام")
@@ -499,18 +477,18 @@ document.addEventListener('DOMContentLoaded', () => {
     interval: 86400
     path: ./ruleset/${rp.yamlKey}.yaml`);
         });
+        processedConfigContent = processedConfigContent.replace('{{RULE_PROVIDERS}}', generatedRuleProvidersYaml.join('\n'));
 
 
         // ----------------------------------------------------
         // تولید بخش 'rules' (همه‌ی آن‌ها را شامل می‌شود - طبق درخواست "دو رو نمی‌خوام")
         // ----------------------------------------------------
         let finalRulesList = [];
-        // اضافه کردن همه Rule های تعریف شده
         rulesToGenerate.forEach(rule => {
             finalRulesList.push(`  - ${rule.ruleString}`);
         });
-        // Rule MATCH همیشه باید آخرین Rule باشد
         finalRulesList.push(`  - MATCH,نوع انتخاب پروکسی 🔀`);
+        processedConfigContent = processedConfigContent.replace('{{RULES}}', finalRulesList.join('\n'));
 
 
         // ----------------------------------------------------
@@ -518,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ----------------------------------------------------
         let generatedProxyGroupsYaml = [];
 
-        let allActiveProxyNames = new Set(); // نام پروکسی‌های فعال (Mahsang, Clash, ...)
+        let allActiveProxyNames = new Set(); 
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
             allActiveProxyNames.add(checkbox.dataset.name);
         });
@@ -585,53 +563,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             generatedProxyGroupsYaml.push(groupContent);
         });
+        processedConfigContent = processedConfigContent.replace('{{PROXY_GROUPS}}', generatedProxyGroupsYaml.join('\n\n'));
 
 
         // ====================================================================
         // ترکیب نهایی تمامی بخش‌های کانفیگ YAML
         // ====================================================================
-        let finalConfigOutput = [];
-
-        // اضافه کردن بخش‌های ثابت به ترتیب (حالا با محتوای کامل)
-        // اطمینان از اینکه خروجی‌ها خالی نباشند
-        if (globalSettingsSection && globalSettingsSection.length > 0) {
-            finalConfigOutput.push(globalSettingsSection);
-        }
-        if (dnsSection && dnsSection.length > 0) {
-            finalConfigOutput.push(dnsSection);
-        }
-        if (snifferSection && snifferSection.length > 0) {
-            finalConfigOutput.push(snifferSection);
-        }
-        if (tunSection && tunSection.length > 0) {
-            finalConfigOutput.push(tunSection);
-        }
-
-        // بخش Rule Providers
-        if (generatedRuleProvidersYaml.length > 0) {
-            finalConfigOutput.push('rule-providers:');
-            finalConfigOutput.push(generatedRuleProvidersYaml.join('\n'));
-        }
-
-        // بخش Proxies
-        finalConfigOutput.push('proxies:');
-        finalConfigOutput.push(generatedProxiesYaml.join('\n\n')); 
-
-        // بخش Proxy Groups
-        finalConfigOutput.push('proxy-groups:');
-        finalConfigOutput.push(generatedProxyGroupsYaml.join('\n\n')); 
-
-        // بخش Rules
-        finalConfigOutput.push('rules:');
-        finalConfigOutput.push(finalRulesList.join('\n')); 
-
-        // بخش NTP
-        if (ntpSection && ntpSection.length > 0) {
-            finalConfigOutput.push(ntpSection);
-        }
-
-
-        outputConfigTextarea.value = finalConfigOutput.join('\n\n').trim();
+        // حالا فقط محتوای پردازش شده رو نمایش میدیم
+        outputConfigTextarea.value = processedConfigContent.trim();
         downloadConfigBtn.style.display = 'block';
         hideLoading(); 
     });
