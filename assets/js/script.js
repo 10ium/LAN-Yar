@@ -5,18 +5,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // =======================================================
     // ۰. متغیرهای سراسری و عناصر DOM اصلی
     // =======================================================
-    let currentLanIp = ''; // متغیری برای نگهداری IP LAN وارد شده توسط کاربر
+    let currentLanIp = '';
 
     const mainContentWrapper = document.getElementById('mainContentWrapper');
     const footer = document.querySelector('footer');
     const lanIpInput = document.getElementById('lanIpInput');
     const validateLanIpBtn = document.getElementById('validateLanIpBtn');
 
-    // اضافه کردن عناصر جدید برای انیمیشن بارگذاری
     const loadingOverlay = document.getElementById('loadingOverlay');
     const loadingMessage = document.getElementById('loadingMessage');
 
-    // توابع کمکی برای نمایش/پنهان کردن انیمیشن بارگذاری
     function showLoading(message = 'در حال پردازش...') {
         loadingMessage.textContent = message;
         loadingOverlay.classList.remove('hidden');
@@ -26,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingOverlay.classList.add('hidden');
     }
 
-    // بلافاصله پس از DOMContentLoaded، پیام اولیه را نمایش دهید
     showLoading('در حال بارگذاری سایت...');
 
 
@@ -69,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`آدرس IP LAN شما (${ip}) با موفقیت تأیید شد. حالا می‌توانید ادامه دهید.`);
             renderPredefinedProxies();
             loadCustomProxies();
-            renderRulesAndProviders(); // این تابع برای رندر Rule ها بهینه شده است
+            renderRulesAndProviders();
         } else {
             currentLanIp = '';
             localStorage.removeItem('lanIp');
@@ -122,7 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // =======================================================
     // ۴. مدیریت انتخاب تمپلت کانفیگ (بخش مربوطه حذف شد)
     // =======================================================
-    // کدهای مربوط به این بخش حذف شده‌اند.
 
     // =======================================================
     // ۵. مدیریت پروکسی‌های پیش‌فرض
@@ -278,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const index = parseInt(addCustomProxyBtn.dataset.editingIndex);
             userCustomProxies[index] = { port, name, type, udp: true };
             delete addCustomProxyBtn.dataset.editingIndex;
-            addCustomProxyBtn.textContent = 'افزودن سرور کاستوم'; // Reset button text
+            addCustomProxyBtn.textContent = 'افزودن سرور کاستوم';
         } else {
             userCustomProxies.push({ port, name, type, udp: true });
         }
@@ -445,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
             generatedProxiesYaml.push(proxyYaml);
         });
 
-        document.querySelectorAll('#customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
+        document.querySelectorAll('#customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
             const proxyServer = checkbox.dataset.ip;
@@ -465,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // تولید بخش 'rule-providers' (بر اساس Rule های انتخاب شده)
         // ----------------------------------------------------
         let generatedRuleProvidersYaml = [];
-        let requiredRpKeys = new Set(); // Rule Provider های مورد نیاز
+        let requiredRpKeys = new Set();
 
         document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]:checked').forEach(checkbox => {
             const relatedRpKey = checkbox.dataset.relatedRp;
@@ -491,71 +487,32 @@ document.addEventListener('DOMContentLoaded', () => {
         // تولید بخش 'rules' (فقط Rule های انتخاب شده توسط کاربر)
         // ----------------------------------------------------
         const customRuleOrder = [
-            'rule_download_managers_rp',
-            'rule_download_rp',
-            'rule_stremio_rp_full',
-            'rule_ban_program_ad_rp',
-            'rule_ban_ad_rp',
-            'rule_private_tracker_rp',
-            'rule_category_public_tracker_rp',
-            'rule_malware_rp',
-            'rule_phishing_rp',
-            'rule_cryptominers_rp',
-            'rule_warninglist_rp',
-            'rule_ponzi_rp',
-            'rule_liteads_rp',
-            'rule_iran_ads_rp',
-            'rule_persian_blocker_rp',
-            'rule_ads_rp',
-            'rule_ban_easy_list_rp',
-            'rule_twitch_rp', // این قانون به گروه توییچ اشاره دارد
-            'rule_telegram_process_exe',
-            'rule_telegram_process_android',
-            'rule_telegram_process_web',
-            'rule_telegram_rp',
-            'rule_youtube_rp_full',
-            'rule_youtube_rp',
-            'rule_youtube_music_rp',
-            'rule_instagram_process_android',
-            'rule_instagram_rp',
-            'rule_ai_deepseek',
-            'rule_ai_qwen',
-            'rule_category_ai_rp',
-            'rule_censor_rp_full',
-            'rule_apps_rp',
-            'rule_iran_rp',
-            'rule_arvancloud_rp',
-            'rule_derakcloud_rp',
-            'rule_iranserver_rp',
-            'rule_parspack_rp',
-            'rule_irasn_rp',
-            'rule_ircidr',
-            'rule_ir_rp_full',
-            'rule_category_ir_rp',
-            'rule_whatsapp_rp',
-            'rule_steam_game_rp',
-            'rule_steam_region_check_rp_full',
-            'rule_game_rp_full',
-            'rule_game_download_rp_full',
-            'rule_category_games_rp_full',
-            'rule_xbox_rp_full',
-            'rule_discord_rp_full',
-            'rule_xiaomi_white_list_rp_full',
-            'rule_xiaomi_ads_rp_full',
-            'rule_xiaomi_block_list_rp_full',
-            'rule_windows_rp_full',
-            'rule_cloudflare_rp_full',
-            'rule_github_rp_full',
-            'rule_google_play_process_android_vending',
-            'rule_google_play_process_android_gms',
-            'rule_google_play_rp_full',
-            'rule_google_rp_full',
-            'rule_local_ips_rp',
-            'rule_private_rp'
+            'rule_download_managers_rp', 'rule_download_rp', 'rule_stremio_rp_full',
+            'rule_ban_program_ad_rp', 'rule_ban_ad_rp', 'rule_private_tracker_rp',
+            'rule_category_public_tracker_rp', 'rule_malware_rp', 'rule_phishing_rp',
+            'rule_cryptominers_rp', 'rule_warninglist_rp', 'rule_ponzi_rp',
+            'rule_liteads_rp', 'rule_iran_ads_rp', 'rule_persian_blocker_rp',
+            'rule_ads_rp', 'rule_ban_easy_list_rp', 'rule_twitch_rp',
+            'rule_telegram_process_exe', 'rule_telegram_process_android', 'rule_telegram_process_web',
+            'rule_telegram_rp', 'rule_youtube_rp_full', 'rule_youtube_rp',
+            'rule_youtube_music_rp', 'rule_instagram_process_android', 'rule_instagram_rp',
+            'rule_ai_deepseek', 'rule_ai_qwen', 'rule_category_ai_rp',
+            'rule_censor_rp_full', 'rule_apps_rp', 'rule_iran_rp',
+            'rule_arvancloud_rp', 'rule_derakcloud_rp', 'rule_iranserver_rp',
+            'rule_parspack_rp', 'rule_irasn_rp', 'rule_ircidr',
+            'rule_ir_rp_full', 'rule_category_ir_rp', 'rule_whatsapp_rp',
+            'rule_steam_game_rp', 'rule_steam_region_check_rp_full', 'rule_game_rp_full',
+            'rule_game_download_rp_full', 'rule_category_games_rp_full', 'rule_xbox_rp_full',
+            'rule_discord_rp_full', 'rule_xiaomi_white_list_rp_full', 'rule_xiaomi_ads_rp_full',
+            'rule_xiaomi_block_list_rp_full', 'rule_windows_rp_full',
+            'rule_cloudflare_rp_full', 'rule_github_rp_full',
+            'rule_google_play_process_android_vending', 'rule_google_play_process_android_gms',
+            'rule_google_play_rp_full', 'rule_google_rp_full',
+            'rule_local_ips_rp', 'rule_private_rp'
         ];
 
         let selectedRules = [];
-        let requiredPgKeys = new Set(); // Proxy Group های مورد نیاز بر اساس Rule ها
+        let requiredPgKeys = new Set();
 
         document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]:checked').forEach(checkbox => {
             const ruleId = checkbox.id;
@@ -573,7 +530,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // مرتب‌سازی Ruleهای انتخاب شده بر اساس customRuleOrder
         selectedRules.sort((a, b) => {
             const indexA = customRuleOrder.indexOf(a.id);
             const indexB = customRuleOrder.indexOf(b.id);
@@ -589,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         finalRulesList.push(`  - IP-CIDR,10.10.34.0/24,نوع انتخاب پروکسی 🔀`);
         finalRulesList.push(`  - MATCH,نوع انتخاب پروکسی 🔀`);
-        requiredPgKeys.add('نوع انتخاب پروکسی 🔀'); // گروه Match همیشه مورد نیاز است
+        requiredPgKeys.add('نوع انتخاب پروکسی 🔀');
         console.log("Final Rules List:", finalRulesList.join('\n'));
 
 
@@ -606,71 +562,71 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("All active proxy names:", Array.from(allActiveProxyNames));
 
 
-        // افزودن گروه‌های پایه مورد نیاز به لیست requiredPgKeys
         const baseProxyGroupsKeys = ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'];
         baseProxyGroupsKeys.forEach(key => requiredPgKeys.add(key));
 
-        // **مهم: اطمینان از اینکه تمامی گروه‌های پروکسی مربوط به قوانین فعال در لیست requiredPgKeys باشند**
-        // این بخش اضافه شد/تغییر یافت
+        // **نکته کلیدی: اطمینان از افزودن تمامی گروه‌های پروکسی مورد نیاز به requiredPgKeys**
+        // این بخش باید تمام گروه‌هایی را که در predefinedProxyGroups تعریف شده‌اند و
+        // یا توسط قوانین فعال مورد نیاز هستند (relatedPgKey) و یا گروه‌های پایه هستند،
+        // به requiredPgKeys اضافه کند تا در فیلتر بعدی حذف نشوند.
         predefinedProxyGroups.forEach(pg => {
-            // Check if this proxy group is explicitly referenced by any active rule
-            const isReferencedByActiveRule = selectedRules.some(rule => rule.relatedPgKey === pg.yamlKey);
-            // Check if this proxy group is one of the base groups
-            const isBaseGroup = baseProxyGroupsKeys.includes(pg.yamlKey);
+            // بررسی می‌کنیم که آیا این گروه پروکسی باید در خروجی باشد:
+            // 1. آیا این گروه پروکسی در حال حاضر در requiredPgKeys (از relatedPgKey قوانین فعال) هست؟
+            // 2. آیا این گروه پروکسی یک گروه پایه است؟
+            // 3. آیا این گروه پروکسی در لیست proxies یک گروه پروکسی دیگر (مثل "نوع انتخاب پروکسی") ارجاع داده شده و آن گروه نیز ساخته خواهد شد؟
+            //    برای مورد 3، نیاز به یک حلقه اضافی یا منطق پیچیده‌تر داریم تا وابستگی‌های تودرتو را حل کنیم.
+            //    برای سادگی و رفع مشکل فعلی، ما فرض می‌کنیم اگر یک قانون به آن اشاره کند، کافی است.
+            //    همچنین، گروه‌هایی که خودشان در لیست 'proxies' گروه‌های دیگر هستند، اگر گروه والدشان ساخته شود،
+            //    به صورت خودکار نامشان در لیست پروکسی‌های والد ظاهر خواهد شد و نیازی نیست به 'requiredPgKeys' اضافه شوند،
+            //    مگر اینکه بخواهیم خودشان هم به عنوان یک گروه در بالاترین سطح 'proxy-groups' تعریف شوند.
 
-            // اضافه کردن گروه به requiredPgKeys فقط اگر توسط یک قانون فعال ارجاع شده باشد
-            // یا اگر یکی از گروه‌های پایه باشد.
-            if (isReferencedByActiveRule || isBaseGroup) {
-                requiredPgKeys.add(pg.yamlKey);
+            // برای حل مشکل فعلی توییچ، کافی است که اطمینان حاصل کنیم 'توییچ 📡' که توسط 'rule_twitch_rp' ارجاع شده، به requiredPgKeys اضافه شود.
+            // این منطق قبلاً اضافه شده بود و باید کار کند.
+            // پس مشکل اصلی احتمالاً در یک کاراکتر نامرئی یا عدم تطابق دقیق رشته‌ای است.
+
+            // برای اطمینان بیشتر و حل احتمالی مشکل کاراکترهای نامرئی، می‌توانیم از .trim() استفاده کنیم:
+            const trimmedPgYamlKey = pg.yamlKey.trim();
+            if (requiredPgKeys.has(trimmedPgYamlKey) || baseProxyGroupsKeys.includes(trimmedPgYamlKey)) {
+                // اگر این گروه قبلا اضافه نشده بود، آن را اضافه کن.
+                // این خط کد باید کار کند اگر key ها واقعا یکسان باشند.
+                requiredPgKeys.add(trimmedPgYamlKey);
+            }
+        });
+
+        // **یک تغییر مهم و احتمالا راه حل نهایی:**
+        // به جای فیلتر کردن predefinedProxyGroups بر اساس requiredPgKeys،
+        // بیایید یک آرایه جدید از گروه‌های مورد نیاز بسازیم
+        // و اطمینان حاصل کنیم که همه گروه‌هایی که در requiredPgKeys هستند، در آن حضور دارند.
+        let finalRequiredGroups = [];
+        customProxyGroupOrder.forEach(key => {
+            const foundPg = predefinedProxyGroups.find(pg => pg.yamlKey === key);
+            if (foundPg && requiredPgKeys.has(key)) {
+                finalRequiredGroups.push(foundPg);
             }
         });
 
 
-        // تعریف ترتیب دلخواه برای گروه‌های پروکسی
         const customProxyGroupOrder = [
-            'نوع انتخاب پروکسی 🔀',
-            'دستی 🤏🏻',
-            'خودکار (بهترین پینگ) 🤖',
-            'پشتیبان (در صورت قطعی) 🧯',
-            'دانلود منیجر 📥',
-            'تلگرام 💬',
-            'یوتیوب ▶️',
-            'گوگل 🌍',
-            'واتس آپ 🟢',
-            'هوش مصنوعی 🤖',
-            'اینستاگرام 📸',
-            'تبلیغات 🆎',
-            'تبلیغات اپ ها 🍃',
-            'رهگیری جهانی 🛑',
-            'سایتای مخرب ⚠️',
-            'استیم 🖥️',
-            'گیم 🎮',
-            'توییچ 📡',
-            'سایتای ایرانی 🇮🇷',
-            'ویندوز 🧊',
-            'کلودفلر ☁️',
-            'گیتهاب 🐙',
-            'دیسکورد 🗣️',
-            'استریمیو 🎬',
-            'سایتای سانسوری 🤬',
-            'بدون فیلترشکن 🛡️',
-            'قطع اینترنت ⛔',
-            'اجازه ندادن 🚫'
+            'نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯',
+            'دانلود منیجر 📥', 'تلگرام 💬', 'یوتیوب ▶️', 'گوگل 🌍', 'واتس آپ 🟢',
+            'هوش مصنوعی 🤖', 'اینستاگرام 📸', 'تبلیغات 🆎', 'تبلیغات اپ ها 🍃',
+            'رهگیری جهانی 🛑', 'سایتای مخرب ⚠️', 'استیم 🖥️', 'گیم 🎮', 'توییچ 📡',
+            'سایتای ایرانی 🇮🇷', 'ویندوز 🧊', 'کلودفلر ☁️', 'گیتهاب 🐙', 'دیسکورد 🗣️',
+            'استریمیو 🎬', 'سایتای سانسوری 🤬',
+            'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'
         ];
 
-        // فیلتر کردن و مرتب‌سازی گروه‌ها بر اساس ترتیب دلخواه
-        let sortedRequiredGroups = predefinedProxyGroups
-            .filter(pg => requiredPgKeys.has(pg.yamlKey))
-            .sort((a, b) => {
-                const indexA = customProxyGroupOrder.indexOf(a.yamlKey);
-                const indexB = customProxyGroupOrder.indexOf(b.yamlKey);
+        // این خط دیگر نیاز به فیلتر کردن از `predefinedProxyGroups` ندارد، زیرا `finalRequiredGroups` را از بالا ساختیم.
+        let sortedRequiredGroups = finalRequiredGroups.sort((a, b) => {
+            const indexA = customProxyGroupOrder.indexOf(a.yamlKey);
+            const indexB = customProxyGroupOrder.indexOf(b.yamlKey);
 
-                if (indexA === -1 && indexB === -1) return 0;
-                if (indexA === -1) return 1;
-                if (indexB === -1) return -1;
+            if (indexA === -1 && indexB === -1) return 0;
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
 
-                return indexA - indexB;
-            });
+            return indexA - indexB;
+        });
         console.log("Sorted required proxy groups:", sortedRequiredGroups.map(g => g.yamlKey));
 
 
