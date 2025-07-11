@@ -138,8 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // پروکسی‌های پیش‌فرض را از predefinedProxies (که باید از جای دیگری تعریف شده باشد، مثلاً global.js) واکشی کنید.
-        // فرض می‌کنیم predefinedProxies در دسترس است.
         predefinedProxies.forEach(proxy => {
             const proxyCard = document.createElement('div');
             proxyCard.className = 'proxy-card';
@@ -147,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="checkbox" id="${proxy.id}"
                         data-ip="${currentLanIp}"
                         data-port="${proxy.port}"
-                        data-name="${proxy.name}" // نام کامل شامل (LAN) اینجا استفاده می‌شود
+                        data-name="${proxy.name}" // نام کامل شامل (LAN) از اینجا خوانده می‌شود
                         data-type="${proxy.type}"
                         data-udp="${proxy.udp}"
                         checked>
@@ -339,11 +337,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        for (const key in categorizedRules) {
+        // اصلاح: ساختار رندرینگ برای نمایش صحیح دسته‌بندی‌ها
+        Object.keys(categorizedRules).sort((a, b) => {
+            // می‌توانید در اینجا منطق مرتب‌سازی دلخواه برای دسته‌ها اضافه کنید
+            // در حال حاضر بر اساس نام کلید دسته‌بندی مرتب می‌شود.
+            return a.localeCompare(b);
+        }).forEach(key => {
             const category = categorizedRules[key];
-            if (category.rules.length === 0) {
-                continue; // اگر دسته‌بندی Rule ای ندارد، آن را نمایش نده
-            }
+            if (category.rules.length === 0) return; // اگر دسته‌بندی Rule ای ندارد، آن را نمایش نده
 
             const categorySection = document.createElement('div');
             categorySection.className = 'rule-category-section';
@@ -353,12 +354,11 @@ document.addEventListener('DOMContentLoaded', () => {
             categorySection.appendChild(categoryTitle);
 
             const categoryGrid = document.createElement('div');
-            categoryGrid.className = 'proxy-cards-grid'; // از همین کلاس grid استفاده می‌کنیم
+            categoryGrid.className = 'proxy-cards-grid'; // استفاده مجدد از کلاس grid
 
             category.rules.forEach(rule => {
                 const ruleItem = document.createElement('div');
                 ruleItem.className = 'rule-item';
-                // در اینجا, id rule و data-attributes رو برای استفاده در تولید کانفیگ قرار میدیم
                 ruleItem.innerHTML = `
                     <input type="checkbox"
                                  id="${rule.id}"
@@ -372,42 +372,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p class="description">${rule.description || ''}</p>
                     </label>
                 `;
-                rulesCheckboxesContainer.appendChild(ruleItem); // اضافه کردن مستقیم به rulesCheckboxesContainer به جای categoryGrid
+                categoryGrid.appendChild(ruleItem);
             });
-            rulesCheckboxesContainer.appendChild(categorySection); // اضافه کردن section بعد از همه آیتم‌ها (این بخش باید بازبینی شود تا گریدها درست کار کنند)
-
-             // اصلاح: اضافه کردن section و grid به صورت صحیح
-             // این بخش نیاز به بازبینی دارد تا ساختار HTML صحیح باشد.
-             // برای نمایش صحیح گروه بندی، هر categoryGrid باید به categorySection اضافه شود
-             // و سپس categorySection به rulesCheckboxesContainer.
-             // کد فعلی شما کمی در این قسمت تداخل دارد.
-
-             // راه حل پیشنهادی برای رندر کردن:
-             // این کد را جایگزین حلقه for (const key in categorizedRules) کنید:
-             // Object.keys(categorizedRules).sort((a, b) => { /* منطق مرتب سازی گروه ها اگر لازم است */ }).forEach(key => {
-             //     const category = categorizedRules[key];
-             //     if (category.rules.length === 0) return;
-             //     const categorySection = document.createElement('div');
-             //     categorySection.className = 'rule-category-section';
-             //     const categoryTitle = document.createElement('h3');
-             //     categoryTitle.innerHTML = `<i class="${category.icon}"></i> ${category.name}`;
-             //     categorySection.appendChild(categoryTitle);
-             //     const categoryGrid = document.createElement('div');
-             //     categoryGrid.className = 'proxy-cards-grid';
-             //     category.rules.forEach(rule => {
-             //         const ruleItem = document.createElement('div');
-             //         ruleItem.className = 'rule-item';
-             //         ruleItem.innerHTML = `...`; // همان innerHTML شما
-             //         categoryGrid.appendChild(ruleItem);
-             //     });
-             //     categorySection.appendChild(categoryGrid);
-             //     rulesCheckboxesContainer.appendChild(categorySection);
-             // });
-        }
-        // اگر ساختار رندرینگ بالا را اصلاح نکردید، این بخش را حذف کنید تا از تکرار جلوگیری شود.
-        // فعلا برای رفع مشکل اصلی (حذف LAN) این بخش مستقیما تاثیری ندارد اما در آینده باید بررسی شود.
+            categorySection.appendChild(categoryGrid);
+            rulesCheckboxesContainer.appendChild(categorySection);
+        });
     }
-
 
     selectAllRulesBtn.addEventListener('click', () => {
         document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]').forEach(checkbox => {
@@ -472,7 +442,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp;
 
-            // اطمینان از اینکه نام پروکسی‌ها بین " " قرار گیرند.
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
             if (proxyType === 'socks5' || proxyType === 'http') {
                 proxyYaml += `\n    udp: ${proxyUdp}`;
@@ -487,7 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp;
 
-            // اطمینان از اینکه نام پروکسی‌ها بین " " قرار گیرند.
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
             if (proxyType === 'socks5' || proxyType === 'http') {
                 proxyYaml += `\n    udp: ${proxyUdp}`;
@@ -565,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'rule_iranserver_rp',
             'rule_parspack_rp',
             'rule_irasn_rp',
-            'rule_ircidr', // این احتمالاً باید ipcidr باشد، نه iras_rp
+            'rule_ircidr',
             'rule_ir_rp_full',
             'rule_category_ir_rp',
             'rule_whatsapp_rp',
@@ -588,14 +556,13 @@ document.addEventListener('DOMContentLoaded', () => {
             'rule_google_rp_full',
             'rule_local_ips_rp',
             'rule_private_rp'
-            // IP-CIDR و MATCH به صورت دستی در انتها اضافه می‌شوند
         ];
 
         let selectedRules = [];
         let requiredPgKeys = new Set(); // Proxy Group های مورد نیاز بر اساس Rule ها
 
         document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]:checked').forEach(checkbox => {
-            const ruleId = checkbox.id; // برای مرتب‌سازی نیاز به ID داریم
+            const ruleId = checkbox.id;
             const ruleString = checkbox.dataset.ruleString;
             const relatedPgKey = checkbox.dataset.relatedPg;
 
@@ -615,7 +582,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const indexA = customRuleOrder.indexOf(a.id);
             const indexB = customRuleOrder.indexOf(b.id);
 
-            // اگر یک Rule در customRuleOrder نباشد، آن را به انتها بفرست
             if (indexA === -1 && indexB === -1) return 0;
             if (indexA === -1) return 1;
             if (indexB === -1) return -1;
@@ -623,12 +589,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return indexA - indexB;
         });
 
-        // حالا finalRulesList را از Ruleهای مرتب شده بسازید
         let finalRulesList = selectedRules.map(rule => `  - ${rule.ruleString}`);
 
-        // اضافه کردن Ruleهای ثابت که در rulesToGenerate نبودند اما در لیست نهایی Ruleها باید باشند.
-        // با توجه به خروجی مورد نظر شما، 'IP-CIDR,10.10.34.0/24,نوع انتخاب پروکسی 🔀'
-        // و 'MATCH,نوع انتخاب پروکسی 🔀' باید همیشه در انتهای لیست Rules باشند.
         finalRulesList.push(`  - IP-CIDR,10.10.34.0/24,نوع انتخاب پروکسی 🔀`);
         finalRulesList.push(`  - MATCH,نوع انتخاب پروکسی 🔀`);
         requiredPgKeys.add('نوع انتخاب پروکسی 🔀'); // گروه Match همیشه مورد نیاز است
@@ -640,9 +602,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // ----------------------------------------------------
         let generatedProxyGroupsYaml = [];
 
-        let allActiveProxyNames = new Set(); // نام پروکسی‌های فعال (Mahsang, Clash, ...)
+        let allActiveProxyNames = new Set(); // نام پروکسی‌های فعال
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
-            const proxyName = checkbox.dataset.name; // از نام کامل پروکسی استفاده می‌شود
+            const proxyName = checkbox.dataset.name;
             allActiveProxyNames.add(proxyName);
         });
         console.log("All active proxy names:", Array.from(allActiveProxyNames));
@@ -651,6 +613,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // افزودن گروه‌های پایه مورد نیاز به لیست requiredPgKeys
         const baseProxyGroupsKeys = ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'];
         baseProxyGroupsKeys.forEach(key => requiredPgKeys.add(key));
+
+        // اضافه کردن yamlKey تمامی گروه های پروکسی تعریف شده در predefinedProxyGroups 
+        // که در rulesToGenerate به آنها ارجاع شده اند.
+        // این تضمین می کند که اگر یک قانون به گروهی اشاره کرد، آن گروه در لیست نهایی ساخته شود.
+        predefinedProxyGroups.forEach(pg => {
+            const isReferencedByActiveRule = selectedRules.some(rule => rule.relatedPgKey === pg.yamlKey);
+            const isBaseGroup = baseProxyGroupsKeys.includes(pg.yamlKey);
+
+            if (isReferencedByActiveRule || isBaseGroup) {
+                requiredPgKeys.add(pg.yamlKey);
+            }
+        });
+
 
         // تعریف ترتیب دلخواه برای گروه‌های پروکسی
         const customProxyGroupOrder = [
@@ -679,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'دیسکورد 🗣️',
             'استریمیو 🎬',
             'سایتای سانسوری 🤬',
-            'بدون فیلترشکن 🛡️', // اینها باید در انتها باشند
+            'بدون فیلترشکن 🛡️',
             'قطع اینترنت ⛔',
             'اجازه ندادن 🚫'
         ];
@@ -691,7 +666,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const indexA = customProxyGroupOrder.indexOf(a.yamlKey);
                 const indexB = customProxyGroupOrder.indexOf(b.yamlKey);
 
-                // اگر یک گروه در customProxyGroupOrder نباشد، آن را به انتها بفرست
                 if (indexA === -1 && indexB === -1) return 0;
                 if (indexA === -1) return 1;
                 if (indexB === -1) return -1;
@@ -702,7 +676,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         const formatProxyRef = (name) => {
-            // تمامی نام‌ها را بین " " قرار می‌دهد
             return `"${name}"`;
         };
 
@@ -722,19 +695,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const groupProxiesList = [];
 
-            // منطق پر کردن لیست پروکسی‌ها برای هر گروه
             if (pg.yamlKey === 'بدون فیلترشکن 🛡️') {
                 groupProxiesList.push('DIRECT');
             } else if (pg.yamlKey === 'قطع اینترنت ⛔' || pg.yamlKey === 'اجازه ندادن 🚫') {
                 groupProxiesList.push('REJECT');
             } else if (pg.yamlKey === 'دستی 🤏🏻' || pg.yamlKey === 'خودکار (بهترین پینگ) 🤖' || pg.yamlKey === 'پشتیبان (در صورت قطعی) 🧯') {
-                // برای این گروه‌ها، فقط پروکسی‌های فعال را اضافه می‌کنیم
-                // allActiveProxyNames الان شامل نام‌های کامل هست
                 Array.from(allActiveProxyNames).sort().forEach(proxyName => {
                     groupProxiesList.push(formatProxyRef(proxyName));
                 });
             } else if (pg.yamlKey === 'نوع انتخاب پروکسی 🔀') {
-                // این گروه باید شامل گروه‌های اصلی باشد، اما بدون DIRECT و REJECT در انتهای خود
                 const desiredOrderForSelectProxyType = [
                     'خودکار (بهترین پینگ) 🤖',
                     'پشتیبان (در صورت قطعی) 🧯',
@@ -743,18 +712,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     'بدون فیلترشکن 🛡️'
                 ];
                 desiredOrderForSelectProxyType.forEach(groupName => {
-                    if (requiredPgKeys.has(groupName)) { // فقط گروه‌هایی که واقعا نیاز داریم را اضافه کنیم
+                    if (requiredPgKeys.has(groupName)) {
                         groupProxiesList.push(formatProxyRef(groupName));
                     }
                 });
-                // DIRECT و REJECT اینجا اضافه نمی‌شوند طبق درخواست شما
             } else {
-                // برای سایر گروه‌های موضوعی که از predefinedProxyGroups می‌آیند
-                // proxies این گروه‌ها از predefinedProxyGroups.js میاد
                 const templateProxies = pg.proxies || [];
                 templateProxies.forEach(proxyRef => {
-                    // هیچ پاکسازی نام (LAN) در اینجا لازم نیست چون predefinedProxyGroups.js
-                    // اکنون نام‌های کامل را دارد
                     if (allActiveProxyNames.has(proxyRef) || ['DIRECT', 'REJECT'].includes(proxyRef) || requiredPgKeys.has(proxyRef)) {
                         groupProxiesList.push(formatProxyRef(proxyRef));
                     }
@@ -762,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             groupProxiesList.forEach(p => {
-                groupContent += `\n      - ${p}`; // 6 فضا برای proxies
+                groupContent += `\n      - ${p}`;
             });
 
             generatedProxyGroupsYaml.push(groupContent);
@@ -775,28 +739,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // ====================================================================
         let finalConfigOutput = [];
 
-        // استفاده مستقیم از محتوای تمپلت برای بخش های ثابت
         finalConfigOutput.push(baseConfigContent.trim());
 
-        // اضافه کردن بخش Rule Providers (اگر وجود دارند)
         if (generatedRuleProvidersYaml.length > 0) {
             finalConfigOutput.push('rule-providers:');
             finalConfigOutput.push(generatedRuleProvidersYaml.join('\n'));
         }
 
-        // اضافه کردن بخش Proxies
         if (generatedProxiesYaml.length > 0) {
             finalConfigOutput.push('proxies:');
             finalConfigOutput.push(generatedProxiesYaml.join('\n\n'));
         }
 
-        // اضافه کردن بخش Proxy Groups
         if (generatedProxyGroupsYaml.length > 0) {
             finalConfigOutput.push('proxy-groups:');
             finalConfigOutput.push(generatedProxyGroupsYaml.join('\n\n'));
         }
 
-        // اضافه کردن بخش Rules
         if (finalRulesList.length > 0) {
             finalConfigOutput.push('rules:');
             finalConfigOutput.push(finalRulesList.join('\n'));
@@ -806,7 +765,6 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadConfigBtn.style.display = 'block';
         hideLoading();
     });
-
 
     // =======================================================
     // ۹. قابلیت دانلود کانفیگ به عنوان فایل .yaml
