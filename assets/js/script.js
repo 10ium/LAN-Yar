@@ -12,6 +12,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const lanIpInput = document.getElementById('lanIpInput');
     const validateLanIpBtn = document.getElementById('validateLanIpBtn');
 
+    // اضافه کردن عناصر جدید برای انیمیشن بارگذاری
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingMessage = document.getElementById('loadingMessage');
+
+    // توابع کمکی برای نمایش/پنهان کردن انیمیشن بارگذاری
+    function showLoading(message = 'در حال پردازش...') {
+        loadingMessage.textContent = message;
+        loadingOverlay.classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        loadingOverlay.classList.add('hidden');
+    }
+
+    // بلافاصله پس از DOMContentLoaded، پیام اولیه را نمایش دهید
+    showLoading('در حال بارگذاری سایت...');
+
+
     // =======================================================
     // ۱. توابع اعتبارسنجی IP و پورت
     // =======================================================
@@ -49,8 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('lanIp', ip);
             toggleContentEnabled(true);
             alert(`آدرس IP LAN شما (${ip}) با موفقیت تأیید شد. حالا می‌توانید ادامه دهید.`);
+            // پس از تأیید IP و فعال شدن محتوا، لیست‌ها رندر می‌شوند
             renderPredefinedProxies();
-            renderCustomProxies();
+            loadCustomProxies(); // اطمینان از بارگذاری و رندر پروکسی‌های کاستوم
             renderRulesAndProviders();
         } else {
             currentLanIp = '';
@@ -125,12 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {
             proxyCard.className = 'proxy-card';
             proxyCard.innerHTML = `
                 <input type="checkbox" id="${proxy.id}" 
-                       data-ip="${currentLanIp}" 
-                       data-port="${proxy.port}" 
-                       data-name="${proxy.name}" 
-                       data-type="${proxy.type}" 
-                       data-udp="${proxy.udp}" 
-                       checked>
+                        data-ip="${currentLanIp}" 
+                        data-port="${proxy.port}" 
+                        data-name="${proxy.name}" 
+                        data-type="${proxy.type}" 
+                        data-udp="${proxy.udp}" 
+                        checked>
                 <label for="${proxy.id}">
                     <h4>${proxy.name}</h4>
                     <p>IP: <code>${currentLanIp}</code> | پورت: <code>${proxy.port}</code></p>
@@ -194,12 +213,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 proxyCard.className = 'proxy-card';
                 proxyCard.innerHTML = `
                     <input type="checkbox" id="custom_${index}" 
-                           data-ip="${currentLanIp}" 
-                           data-port="${proxy.port}" 
-                           data-name="${proxy.name}" 
-                           data-type="${proxy.type}" 
-                           data-udp="${proxy.udp || true}" 
-                           checked>
+                            data-ip="${currentLanIp}" 
+                            data-port="${proxy.port}" 
+                            data-name="${proxy.name}" 
+                            data-type="${proxy.type}" 
+                            data-udp="${proxy.udp || true}" 
+                            checked>
                     <label for="custom_${index}">
                         <h4>${proxy.name}</h4>
                         <p>IP: <code>${currentLanIp}</code> | پورت: <code>${proxy.port}</code></p>
@@ -260,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const index = parseInt(addCustomProxyBtn.dataset.editingIndex);
             userCustomProxies[index] = { port, name, type, udp: true };
             delete addCustomProxyBtn.dataset.editingIndex;
-            addCustomProxyBtn.textContent = 'افزودن سرور';
+            addCustomProxyBtn.textContent = 'به‌روزرسانی سرور';
         } else {
             userCustomProxies.push({ port, name, type, udp: true });
         }
@@ -393,25 +412,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadConfigBtn = document.getElementById('downloadConfigBtn');
 
     generateConfigBtn.addEventListener('click', async () => {
-        outputConfigTextarea.value = 'در حال تولید کانفیگ... لطفاً صبر کنید.';
+        // --- اضافه شده برای نمایش انیمیشن لودینگ ---
+        showLoading('در حال تولید کانفیگ... لطفاً صبر کنید.'); 
+        // ---------------------------------------------
+        outputConfigTextarea.value = '';
         downloadConfigBtn.style.display = 'none';
 
         if (!currentLanIp) {
             alert('لطفاً ابتدا آدرس IP دستگاه VPN (LAN) را در بخش ۱ وارد و تأیید کنید.');
             outputConfigTextarea.value = '';
             lanIpInput.focus();
+            // --- اضافه شده برای پنهان کردن انیمیشن در صورت خطا ---
+            hideLoading(); 
+            // ----------------------------------------------------
             return;
         }
 
         let baseConfigContent = '';
 
-        // *** اصلاح مسیر تمپلت پیش‌فرض ***
-        // برای اطمینان از اینکه فایل در GitHub Pages پیدا می‌شود، مسیر را با استفاده از base URL سایت می‌سازیم.
         const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
         const defaultTemplateUrl = baseUrl + 'config-templates/default-mihomo-template.yaml';
 
         try {
-            const response = await fetch(defaultTemplateUrl); // استفاده از آدرس تصحیح شده
+            const response = await fetch(defaultTemplateUrl);
             if (!response.ok) {
                 throw new Error(`خطا در بارگذاری تمپلت پیش‌فرض: ${response.statusText || 'Failed to fetch'}. مطمئن شوید فایل default-mihomo-template.yaml در مسیر درست قرار دارد و دسترسی به آن امکان‌پذیر است.`);
             }
@@ -419,6 +442,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             alert(`خطا در بارگذاری تمپلت پیش‌فرض: ${error.message}`);
             outputConfigTextarea.value = '';
+            // --- اضافه شده برای پنهان کردن انیمیشن در صورت خطا ---
+            hideLoading(); 
+            // ----------------------------------------------------
             return;
         }
 
@@ -603,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     groupContent += `\n      - ${p}`;
                 });
                 if (filteredProxiesForGroup.length === 0 && pg.type !== 'reject' && pg.type !== 'direct') {
-                     groupContent += `\n      - DIRECT\n      - REJECT`;
+                    groupContent += `\n      - DIRECT\n      - REJECT`;
                 }
 
             } else {
@@ -649,6 +675,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         outputConfigTextarea.value = finalConfigOutput.join('\n\n').trim();
         downloadConfigBtn.style.display = 'block';
+        // --- اضافه شده برای پنهان کردن انیمیشن پس از اتمام تولید ---
+        hideLoading(); 
+        // --------------------------------------------------------
     });
 
 
@@ -716,4 +745,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPredefinedProxies();
     loadCustomProxies();
     renderRulesAndProviders();
+
+    // --- اضافه شده برای پنهان کردن انیمیشن بارگذاری اولیه پس از اتمام بارگذاری و رندر اولیه ---
+    hideLoading(); 
+    // ---------------------------------------------------------------------------------------
 });
