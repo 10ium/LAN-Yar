@@ -565,11 +565,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const baseProxyGroupsKeys = ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'];
         baseProxyGroupsKeys.forEach(key => requiredPgKeys.add(key));
 
-        // **نکته کلیدی: اطمینان از افزودن تمامی گروه‌های پروکسی مورد نیاز به requiredPgKeys**
+        // **مهم: اطمینان از اینکه تمامی گروه‌های پروکسی مربوط به قوانین فعال در لیست requiredPgKeys باشند**
         // این بخش اطمینان می‌دهد که هر گروهی که توسط یک قانون فعال ارجاع شده است،
         // یا یک گروه پایه است، در لیست نهایی گروه‌های پروکسی تولید شده باشد.
         predefinedProxyGroups.forEach(pg => {
-            const trimmedPgYamlKey = pg.yamlKey.trim(); // برای اطمینان از حذف فضاهای خالی اضافی
+            // یک بررسی اضافه: مطمئن شوید pg.yamlKey تعریف شده باشد قبل از trim()
+            // همچنین، کاراکترهای نامرئی یا فواصل خالی رو از اول و آخر رشته حذف می‌کنیم
+            const trimmedPgYamlKey = (typeof pg.yamlKey === 'string' && pg.yamlKey.trim()) || null;
+            
+            // اگر trimmedPgYamlKey خالی (null) باشد، این گروه را نادیده بگیرید
+            if (!trimmedPgYamlKey) {
+                return; 
+            }
+
             const isReferencedByActiveRule = selectedRules.some(rule => rule.relatedPgKey === trimmedPgYamlKey);
             const isBaseGroup = baseProxyGroupsKeys.includes(trimmedPgYamlKey);
 
@@ -593,12 +601,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalRequiredGroups = [];
         customProxyGroupOrder.forEach(key => {
             const foundPg = predefinedProxyGroups.find(pg => pg.yamlKey === key);
-            if (foundPg && requiredPgKeys.has(key)) {
+            // اضافه کردن بررسی: مطمئن شوید foundPg و key هر دو موجود باشند و key در requiredPgKeys باشد
+            // همچنین key باید یک رشته باشد تا بتوان آن را به درستی با requiredPgKeys.has(key) مقایسه کرد
+            if (foundPg && typeof key === 'string' && requiredPgKeys.has(key)) {
                 finalRequiredGroups.push(foundPg);
             }
         });
 
-        // حالا sortedRequiredGroups را از finalRequiredGroups که شامل گروه‌های مورد نیاز است، مرتب می‌کنیم
         let sortedRequiredGroups = finalRequiredGroups.sort((a, b) => {
             const indexA = customProxyGroupOrder.indexOf(a.yamlKey);
             const indexB = customProxyGroupOrder.indexOf(b.yamlKey);
