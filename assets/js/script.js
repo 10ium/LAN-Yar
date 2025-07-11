@@ -433,23 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- بازنگری کامل استخراج بخش‌های ثابت (نهایی) ---
-        // این تابع حالا هر بلوک YAML رو از عنوانش تا شروع بلوک بعدی یا انتهای فایل می‌گیره
-        const getFullSectionContent = (startKey, content) => {
-            const regex = new RegExp(`(^${startKey}:[\\s\\S]*?)(?=(?:^\\w[\\w-]*:)|(?:^#\\s*={10,}.*$)|$)`, 'm');
-            const match = content.match(regex);
-            // Trim and ensure the key itself is included
-            return match ? match[1].trim() : '';
-        };
-
-        const globalSettingsSection = getFullSectionContent('global-client-fingerprint', baseConfigContent);
-        const dnsSection = getFullSectionContent('dns', baseConfigContent);
-        const snifferSection = getFullSectionContent('sniffer', baseConfigContent);
-        const tunSection = getFullSectionContent('tun', baseConfigContent);
-        const ntpSection = getFullSectionContent('ntp', baseConfigContent);
-        // -----------------------------------------------------
-
-
         // ----------------------------------------------------
         // تولید بخش 'proxies' (بر اساس انتخاب کاربر در UI)
         // ----------------------------------------------------
@@ -462,12 +445,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const proxyUdp = checkbox.dataset.udp;
 
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
-            if (proxyType === 'socks5' || proxyType === 'http') {
+            if (proxyType === 'socks5' || proxyType === 'http') { // Add UDP only for relevant types
                 proxyYaml += `\n    udp: ${proxyUdp}`;
             }
             generatedProxiesYaml.push(proxyYaml);
         });
 
+        // ** اضافه کردن پروکسی‌های کاستوم به لیست پروکسی‌های فعال **
         document.querySelectorAll('#customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
@@ -476,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const proxyUdp = checkbox.dataset.udp;
 
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
-            if (proxyType === 'socks5' || proxyType === 'http') {
+            if (proxyType === 'socks5' || proxyType === 'http') { // Add UDP only for relevant types
                 proxyYaml += `\n    udp: ${proxyUdp}`;
             }
             generatedProxiesYaml.push(proxyYaml);
@@ -534,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let generatedProxyGroupsYaml = [];
 
         let allActiveProxyNames = new Set(); // نام پروکسی‌های فعال (Mahsang, Clash, Custom, ...)
-        document.querySelectorAll('#predefinedProxiesList input[type="checkbox']:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
+        document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             allActiveProxyNames.add(checkbox.dataset.name);
         });
 
@@ -574,6 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         // تابع کمکی برای فرمت کردن نام پروکسی/گروه با کوتیشن (همه اجباری)
+        // این تابع اطمینان می دهد که نام های فارسی یا دارای کاراکتر خاص به درستی در YAML قرار گیرند.
         const formatProxyRefAllQuotes = (name) => {
              return `"${name}"`;
         };
@@ -589,22 +574,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // برای گروه‌های اصلی و موضوعی
             templateProxies.forEach(proxyRef => {
-                // اگر ارجاع به DIRECT یا REJECT است (بدون کوتیشن، زیرا MiHoMo اینها را کلمات کلیدی می‌شناسد)
+                // اگر ارجاع به DIRECT یا REJECT است (اینها کلمات کلیدی YAML هستند و نباید در کوتیشن باشند)
                 if (proxyRef === 'DIRECT' || proxyRef === 'REJECT') {
-                    if (!list.includes(proxyRef)) { // بدون کوتیشن برای مقایسه
+                    if (!list.includes(proxyRef)) {
                         list.push(proxyRef);
                     }
                 }
                 // اگر ارجاع به یک گروه پایه (با نام فارسی) یا یک پروکسی فعال است
-                else if (allActiveProxies.has(proxyRef) || predefinedProxyGroups.some(pg => pg.yamlKey === proxyRef)) { // بررسی هم پروکسی‌های فعال هم گروه‌های پایه
-                    // اطمینان از اینکه قبلاً اضافه نشده و با کوتیشن اضافه شود
-                    if (!list.includes(formatProxyRefAllQuotes(proxyRef))) {
-                        list.push(formatProxyRefAllQuotes(proxyRef));
+                else if (allActiveProxies.has(proxyRef) || predefinedProxyGroups.some(pg => pg.yamlKey === proxyRef)) {
+                    // نام پروکسی‌ها و گروه‌ها (با نام فارسی) باید حتماً در کوتیشن قرار گیرند
+                    const formattedProxyName = formatProxyRefAllQuotes(proxyRef);
+                    if (!list.includes(formattedProxyName)) {
+                        list.push(formattedProxyName);
                     }
                 }
             });
 
             // مدیریت حالت‌هایی که لیست پروکسی‌ها برای یک گروه موضوعی (نه پایه) خالی می‌ماند
+            // اگر گروهی موضوعی باشد و هیچ پراکسی ای به آن اضافه نشده باشد، پراکسی های پیش فرض را اضافه می کند
             const isTopicGroup = !baseProxyGroupsKeys.includes(groupData.yamlKey) && !specialLastGroupsKeys.includes(groupData.yamlKey);
             if (isTopicGroup && list.length === 0) {
                  list.push(formatProxyRefAllQuotes("نوع انتخاب پروکسی 🔀"));
@@ -644,19 +631,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // ====================================================================
         let finalConfigOutput = [];
 
-        // اضافه کردن بخش‌های ثابت به ترتیب (حالا با محتوای کامل)
-        if (globalSettingsSection) {
-            finalConfigOutput.push(globalSettingsSection);
-        }
-        if (dnsSection) {
-            finalConfigOutput.push(dnsSection);
-        }
-        if (snifferSection) {
-            finalConfigOutput.push(snifferSection);
-        }
-        if (tunSection) {
-            finalConfigOutput.push(tunSection);
-        }
+        // اضافه کردن محتوای کامل تمپلت پایه (شامل global, dns, sniffer, tun, ntp)
+        finalConfigOutput.push(baseConfigContent.trim()); // Trim any leading/trailing whitespace
 
         // بخش Rule Providers
         if (generatedRuleProvidersYaml.length > 0) {
@@ -675,11 +651,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // بخش Rules
         finalConfigOutput.push('rules:');
         finalConfigOutput.push(finalRulesList.join('\n'));
-
-        // بخش NTP
-        if (ntpSection) {
-            finalConfigOutput.push(ntpSection);
-        }
 
 
         outputConfigTextarea.value = finalConfigOutput.join('\n\n').trim();
