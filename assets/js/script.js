@@ -432,16 +432,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // این تابع حالا هر بلوک YAML رو از عنوانش تا شروع بلوک بعدی یا انتهای فایل می‌گیره
         const getFullSectionByMarkers = (startMarker, endMarker, content) => {
             // Regex برای گرفتن خط شروع مارکر و تمام خطوط بعد از اون تا مارکر پایان یا انتهای فایل
-            const regex = new RegExp(`(^#\\s*${startMarker}\\s*$(?:\\r\\n|\\n)?)([\\s\\S]*?)(?=(?:^#\\s*${endMarker}\\s*$|^#\\s*={10,}.*$))`, 'm');
+            const regex = new RegExp(`(^#\\s*${startMarker}\\s*$(?:\\r\\n|\\n)([\\s\\S]*?))(?=(?:^#\\s*${endMarker}\\s*$|^#\\s*={10,}.*$))`, 'm');
             const match = content.match(regex);
             
-            if (match && match[2]) {
-                // match[1] شامل خط مارکر شروع و خط جدید بعدشه
-                // match[2] شامل محتوای داخل بلوک هست
-                return match[1] + match[2].trim();
-            } else if (match && match[1]) {
-                // اگر محتوایی نباشه ولی مارکر شروع پیدا بشه (مثل بخش‌های پر شونده)
-                return match[1].trim();
+            if (match && match[1]) { // match[1] شامل کل بلوک پیدا شده هست (مارکر شروع + محتوا)
+                return match[1].trim(); 
             }
             return ''; // اگر پیدا نشد
         };
