@@ -329,9 +329,9 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // فقط Rule ها رو در UI نمایش می‌دهیم، نه Rule Provider ها
+        // فقط Rule ها رو در UI نمایش می‌دهیم
         rulesToGenerate.forEach(rule => {
-            if (rule.hidden) return; // Rule های پنهان نباید نمایش داده شوند
+            if (rule.hidden) return; 
             if (rule.group && categorizedRules[rule.group]) {
                 categorizedRules[rule.group].rules.push(rule);
             }
@@ -340,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const key in categorizedRules) {
             const category = categorizedRules[key];
             if (category.rules.length === 0) {
-                continue; // اگر دسته‌بندی Rule ای ندارد، آن را نمایش نده
+                continue; 
             }
 
             const categorySection = document.createElement('div');
@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
             categorySection.appendChild(categoryTitle);
 
             const categoryGrid = document.createElement('div');
-            categoryGrid.className = 'proxy-cards-grid'; // از همین کلاس grid استفاده می‌کنیم
+            categoryGrid.className = 'proxy-cards-grid'; 
 
             category.rules.forEach(rule => {
                 const ruleItem = document.createElement('div');
@@ -428,19 +428,31 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- بازنگری کامل استخراج بخش‌های ثابت (نهایی) ---
-        // این تابع حالا هر بلوک YAML رو از عنوانش تا شروع بلوک بعدی یا انتهای فایل می‌گیره
-        const getFullSectionContent = (startKey, content) => {
-            const regex = new RegExp(`(^${startKey}:[\\s\\S]*?)(?=(^\\w[\\w-]*:)|$|^#\\s*={10,}.*$)`, 'm');
+        // --- بازنگری نهایی استخراج بخش‌های ثابت با نشانگرهای جدید ---
+        const getFullSectionByMarkers = (startMarker, endMarker, content) => {
+            const regex = new RegExp(`^#\\s*${startMarker}\\s*$(?:\\r\\n|\\n)([\\s\\S]*?)(?=(?:^#\\s*${endMarker}\\s*$|^#\\s*={10,}.*$))`, 'm');
             const match = content.match(regex);
-            return match ? match[1].trim() : '';
+            return match && match[1] ? match[1].trim() : '';
         };
 
-        const globalSettingsSection = getFullSectionContent('global-client-fingerprint', baseConfigContent);
-        const dnsSection = getFullSectionContent('dns', baseConfigContent);
-        const snifferSection = getFullSectionContent('sniffer', baseConfigContent);
-        const tunSection = getFullSectionContent('tun', baseConfigContent);
-        const ntpSection = getFullSectionContent('ntp', baseConfigContent); 
+        const globalSettingsSection = getFullSectionByMarkers('=== GLOBAL SETTINGS ===', '=== DNS SETTINGS ===', baseConfigContent);
+        const dnsSection = getFullSectionByMarkers('=== DNS SETTINGS ===', '=== SNIFFER SETTINGS ===', baseConfigContent);
+        const snifferSection = getFullSectionByMarkers('=== SNIFFER SETTINGS ===', '=== TUN SETTINGS ===', baseConfigContent);
+        const tunSection = getFullSectionByMarkers('=== TUN SETTINGS ===', '=== RULE PROVIDERS SECTION START ===', baseConfigContent);
+        const ntpSection = getFullSectionByMarkers('=== NTP SETTINGS START ===', '=== NTP SETTINGS END ===', baseConfigContent);
+        
+        // اگر NTP در انتهای فایل باشه و بعدش چیزی نباشه، حالت خاص رو هم در نظر بگیریم
+        if (!ntpSection) { // اگر با نشانگر بالا پیدا نشد، شاید در انتها باشه بدون نشانگر پایان
+            const lastNtpRegex = /^ntp:([\s\S]*?)(?=(^#.*$)|$)/m; // میگیره تا کامنت بعدی یا انتهای فایل
+            const lastNtpMatch = baseConfigContent.match(lastNtpRegex);
+            if(lastNtpMatch) {
+                const preambleRegex = /^\s*(#.*)?\s*(ntp:)/m; // برای گرفتن خط NTP: و کامنت احتمالی
+                const preambleMatch = baseConfigContent.substring(lastNtpMatch.index).match(preambleRegex);
+                if (preambleMatch) {
+                    ntpSection = preambleMatch[0] + "\n" + lastNtpMatch[1].trim(); // اضافه کردن خط NTP: و محتوا
+                }
+            }
+        }
         // -----------------------------------------------------
 
 
@@ -462,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
             generatedProxiesYaml.push(proxyYaml);
         });
 
-        document.querySelectorAll('#customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
+        document.querySelectorAll('#customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
             const proxyServer = currentLanIp; // استفاده از currentLanIp
@@ -477,82 +489,53 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         // ----------------------------------------------------
-        // تولید بخش 'rule-providers' (بر اساس Rule های انتخاب شده)
+        // تولید بخش 'rule-providers' (همه‌ی آن‌ها را شامل می‌شود - طبق درخواست "دو رو نمی‌خوام")
         // ----------------------------------------------------
         let generatedRuleProvidersYaml = [];
-        let requiredRpKeys = new Set(); // Rule Provider های مورد نیاز
-
-        // جمع آوری Rule Provider های مورد نیاز بر اساس Rule های انتخاب شده در UI
-        document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]:checked').forEach(checkbox => {
-            const relatedRpKey = checkbox.dataset.relatedRp;
-            if (relatedRpKey) { 
-                requiredRpKeys.add(relatedRpKey);
-            }
-        });
-
         predefinedRuleProviders.forEach(rp => {
-            if (requiredRpKeys.has(rp.yamlKey)) {
-                generatedRuleProvidersYaml.push(`  ${rp.yamlKey}:
+            generatedRuleProvidersYaml.push(`  ${rp.yamlKey}:
     type: http
     behavior: ${rp.behavior}
     url: ${rp.url}
     interval: 86400
     path: ./ruleset/${rp.yamlKey}.yaml`);
-            }
         });
 
+
         // ----------------------------------------------------
-        // تولید بخش 'rules' (فقط Rule های انتخاب شده توسط کاربر)
+        // تولید بخش 'rules' (همه‌ی آن‌ها را شامل می‌شود - طبق درخواست "دو رو نمی‌خوام")
         // ----------------------------------------------------
         let finalRulesList = [];
-        let requiredPgKeys = new Set(); // Proxy Group های مورد نیاز بر اساس Rule ها
-
-        // جمع آوری Rule های فعال و Proxy Group های مرتبط
-        document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]:checked').forEach(checkbox => {
-            const ruleString = checkbox.dataset.ruleString;
-            const relatedPgKey = checkbox.dataset.relatedPg;
-
-            finalRulesList.push(`  - ${ruleString}`);
-            if (relatedPgKey) { 
-                requiredPgKeys.add(relatedPgKey);
-            }
+        // اضافه کردن همه Rule های تعریف شده
+        rulesToGenerate.forEach(rule => {
+            finalRulesList.push(`  - ${rule.ruleString}`);
         });
-
         // Rule MATCH همیشه باید آخرین Rule باشد
         finalRulesList.push(`  - MATCH,نوع انتخاب پروکسی 🔀`);
-        requiredPgKeys.add('نوع انتخاب پروکسی 🔀'); // گروه Match همیشه مورد نیاز است
+
 
         // ----------------------------------------------------
-        // تولید بخش 'proxy-groups' (بر اساس Rule ها و گروه‌های پایه)
+        // تولید بخش 'proxy-groups' (همه‌ی آن‌ها را شامل می‌شود - طبق درخواست "دو رو نمی‌خوام")
         // ----------------------------------------------------
         let generatedProxyGroupsYaml = [];
 
         let allActiveProxyNames = new Set(); // نام پروکسی‌های فعال (Mahsang, Clash, ...)
-        document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
+        document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
             allActiveProxyNames.add(checkbox.dataset.name);
         });
         
-        // افزودن گروه‌های پایه مورد نیاز به لیست
-        const baseProxyGroupsKeys = ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'];
-        baseProxyGroupsKeys.forEach(key => requiredPgKeys.add(key));
-
-
-        let sortedRequiredGroups = predefinedProxyGroups.filter(pg => requiredPgKeys.has(pg.yamlKey));
-
-        // اطمینان از اینکه "نوع انتخاب پروکسی" همیشه اول باشه
-        sortedRequiredGroups.sort((a, b) => {
-            if (a.yamlKey === 'نوع انتخاب پروکسی 🔀') return -1;
-            if (b.yamlKey === 'نوع انتخاب پروکسی 🔀') return 1;
-            return 0;
-        });
-
         // تابع کمکی برای فرمت کردن نام پروکسی/گروه با کوتیشن (همه اجباری)
         const formatProxyRefAllQuotes = (name) => {
-             return `"${name}"`;
+             // اگر نام DIRECT یا REJECT است، بدون کوتیشن باشد
+            if (name === 'DIRECT' || name === 'REJECT') {
+                return name;
+            }
+            // بقیه نام‌ها با کوتیشن
+            return `"${name}"`;
         };
         
-        // تابع کمکی برای تولید لیست پروکسی‌ها برای یک گروه خاص با حفظ ترتیب
-        const getGroupProxiesList = (groupData, allActiveProxies) => {
+        // تابع کمکی برای تولید لیست پروکسی‌ها برای یک گروه خاص با حفظ ترتیب (حالا برای همه گروه‌ها)
+        const getGroupProxiesListForAllGroups = (groupData, allAvailableProxies) => {
             const list = [];
             const templateProxies = groupData.proxies || [];
 
@@ -560,37 +543,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (groupData.yamlKey === 'بدون فیلترشکن 🛡️') return ['DIRECT']; 
             if (groupData.yamlKey === 'قطع اینترنت ⛔' || groupData.yamlKey === 'اجازه ندادن 🚫') return ['REJECT']; 
 
-            // برای گروه‌های اصلی و موضوعی
+            // برای بقیه گروه‌ها (اصلی و موضوعی)
             templateProxies.forEach(proxyRef => {
-                // اگر ارجاع به DIRECT یا REJECT است (بدون کوتیشن، زیرا MiHoMo اینها را کلمات کلیدی می‌شناسد)
+                // اگر DIRECT یا REJECT است (بدون کوتیشن)
                 if (proxyRef === 'DIRECT' || proxyRef === 'REJECT') {
-                    if (!list.includes(proxyRef)) { // بدون کوتیشن برای مقایسه
+                    if (!list.includes(proxyRef)) { 
                         list.push(proxyRef);
                     }
                 } 
-                // اگر ارجاع به یک گروه پایه (با نام فارسی) یا یک پروکسی فعال است
-                else if (allActiveProxies.has(proxyRef) || predefinedProxyGroups.some(pg => pg.yamlKey === proxyRef)) { // بررسی هم پروکسی‌های فعال هم گروه‌های پایه
-                    // اطمینان از اینکه قبلاً اضافه نشده و با کوتیشن اضافه شود
-                    if (!list.includes(formatProxyRefAllQuotes(proxyRef))) {
-                        list.push(formatProxyRefAllQuotes(proxyRef));
+                // اگر ارجاع به یک گروه پایه یا یک پروکسی فعال است
+                else {
+                    const formattedRef = formatProxyRefAllQuotes(proxyRef);
+                    if (!list.includes(formattedRef)) {
+                        list.push(formattedRef);
                     }
                 }
             });
-
-            // مدیریت حالت‌هایی که لیست پروکسی‌ها برای یک گروه موضوعی (نه پایه) خالی می‌ماند
-            const isTopicGroup = !baseProxyGroupsKeys.includes(groupData.yamlKey);
-            if (isTopicGroup && list.length === 0) {
-                 list.push(formatProxyRefAllQuotes("نوع انتخاب پروکسی 🔀"));
-                 list.push(formatProxyRefAllQuotes("بدون فیلترشکن 🛡️"));
-                 list.push(formatProxyRefAllQuotes("اجازه ندادن 🚫"));
-            }
 
             return list;
         };
 
 
-        sortedRequiredGroups.forEach(pg => {
-            let groupContent = `  - name: ${formatProxyRefAllQuotes(pg.yamlKey)}\n    type: ${pg.type}`; // نام گروه هم کوتیشن بگیره
+        predefinedProxyGroups.forEach(pg => { // حالا همه گروه‌های پیش‌فرض رو اضافه می‌کنیم
+            let groupContent = `  - name: ${formatProxyRefAllQuotes(pg.yamlKey)}\n    type: ${pg.type}`; 
             if (pg.icon) groupContent += `\n    icon: ${pg.icon}`;
             if (pg.url) groupContent += `\n    url: ${pg.url}`;
             if (pg.interval) groupContent += `\n    interval: ${pg.interval}`;
@@ -602,7 +577,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             groupContent += `\n    proxies:`;
 
-            const proxiesForThisGroup = getGroupProxiesList(pg, allActiveProxyNames);
+            // حالا لیست پروکسی‌ها برای این گروه بر اساس تابع جدید
+            const proxiesForThisGroup = getGroupProxiesListForAllGroups(pg, allActiveProxyNames);
             
             proxiesForThisGroup.forEach(p => {
                 groupContent += `\n      - ${p}`;
