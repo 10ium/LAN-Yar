@@ -569,22 +569,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // این بخش اطمینان می‌دهد که هر گروهی که توسط یک قانون فعال ارجاع شده است،
         // یا یک گروه پایه است، در لیست نهایی گروه‌های پروکسی تولید شده باشد.
         predefinedProxyGroups.forEach(pg => {
-            // یک بررسی اضافه: مطمئن شوید pg.yamlKey تعریف شده باشد قبل از trim()
-            // همچنین، کاراکترهای نامرئی یا فواصل خالی رو از اول و آخر رشته حذف می‌کنیم
-            const trimmedPgYamlKey = (typeof pg.yamlKey === 'string' && pg.yamlKey.trim()) || null;
+            // برای اطمینان از صحت مقایسه با کاراکترهای یونیکد، رشته‌ها را عادی‌سازی می‌کنیم.
+            const normalizedPgYamlKey = typeof pg.yamlKey === 'string' ? pg.yamlKey.normalize('NFC').trim() : null;
             
-            // اگر trimmedPgYamlKey خالی (null) باشد، این گروه را نادیده بگیرید
-            if (!trimmedPgYamlKey) {
+            if (!normalizedPgYamlKey) { // اگر key نامعتبر بود، به آیتم بعدی برو
                 return; 
             }
 
-            const isReferencedByActiveRule = selectedRules.some(rule => rule.relatedPgKey === trimmedPgYamlKey);
-            const isBaseGroup = baseProxyGroupsKeys.includes(trimmedPgYamlKey);
+            // اطمینان حاصل می‌کنیم که relatedPgKey هم normalize شده است
+            const isReferencedByActiveRule = selectedRules.some(rule => {
+                const normalizedRelatedPgKey = typeof rule.relatedPgKey === 'string' ? rule.relatedPgKey.normalize('NFC').trim() : null;
+                return normalizedRelatedPgKey === normalizedPgYamlKey;
+            });
+
+            const isBaseGroup = baseProxyGroupsKeys.includes(normalizedPgYamlKey);
 
             if (isReferencedByActiveRule || isBaseGroup) {
-                requiredPgKeys.add(trimmedPgYamlKey);
+                requiredPgKeys.add(normalizedPgYamlKey);
             }
         });
+
+        // برای عیب‌یابی: لاگ کردن محتوای requiredPgKeys بعد از پر شدن
+        console.log("Required Proxy Groups Keys (before sorting):", Array.from(requiredPgKeys));
 
 
         const customProxyGroupOrder = [
@@ -600,11 +606,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // ساخت finalRequiredGroups از predefinedProxyGroups بر اساس requiredPgKeys
         let finalRequiredGroups = [];
         customProxyGroupOrder.forEach(key => {
-            const foundPg = predefinedProxyGroups.find(pg => pg.yamlKey === key);
-            // اضافه کردن بررسی: مطمئن شوید foundPg و key هر دو موجود باشند و key در requiredPgKeys باشد
-            // همچنین key باید یک رشته باشد تا بتوان آن را به درستی با requiredPgKeys.has(key) مقایسه کرد
-            if (foundPg && typeof key === 'string' && requiredPgKeys.has(key)) {
-                finalRequiredGroups.push(foundPg);
+            const normalizedKey = typeof key === 'string' ? key.normalize('NFC').trim() : null;
+
+            if (normalizedKey && requiredPgKeys.has(normalizedKey)) {
+                // پیدا کردن شیء کامل گروه از predefinedProxyGroups
+                const foundPg = predefinedProxyGroups.find(pg => typeof pg.yamlKey === 'string' && pg.yamlKey.normalize('NFC').trim() === normalizedKey);
+                if (foundPg) {
+                    finalRequiredGroups.push(foundPg);
+                }
             }
         });
 
@@ -658,14 +667,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     'بدون فیلترشکن 🛡️'
                 ];
                 desiredOrderForSelectProxyType.forEach(groupName => {
-                    if (requiredPgKeys.has(groupName)) {
+                    if (requiredPgKeys.has(groupName.normalize('NFC').trim())) { // normalize groupName here too
                         groupProxiesList.push(formatProxyRef(groupName));
                     }
                 });
             } else {
                 const templateProxies = pg.proxies || [];
                 templateProxies.forEach(proxyRef => {
-                    if (allActiveProxyNames.has(proxyRef) || ['DIRECT', 'REJECT'].includes(proxyRef) || requiredPgKeys.has(proxyRef)) {
+                    const normalizedProxyRef = typeof proxyRef === 'string' ? proxyRef.normalize('NFC').trim() : null;
+                    if (normalizedProxyRef && (allActiveProxyNames.has(normalizedProxyRef) || ['DIRECT', 'REJECT'].includes(normalizedProxyRef) || requiredPgKeys.has(normalizedProxyRef))) {
                         groupProxiesList.push(formatProxyRef(proxyRef));
                     }
                 });
