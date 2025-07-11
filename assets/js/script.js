@@ -428,32 +428,32 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- بازنگری نهایی استخراج بخش‌های ثابت با نشانگرهای جدید ---
+        // --- بازنگری نهایی استخراج بخش‌های ثابت با نشانگرهای جدید (فقط این بخش اصلاح شد) ---
+        // این تابع حالا هر بلوک YAML رو از عنوانش تا شروع بلوک بعدی یا انتهای فایل می‌گیره
         const getFullSectionByMarkers = (startMarker, endMarker, content) => {
-            const regex = new RegExp(`^#\\s*${startMarker}\\s*$(?:\\r\\n|\\n)([\\s\\S]*?)(?=(?:^#\\s*${endMarker}\\s*$|^#\\s*={10,}.*$))`, 'm');
+            // Regex برای گرفتن خط شروع مارکر و تمام خطوط بعد از اون تا مارکر پایان یا انتهای فایل
+            const regex = new RegExp(`(^#\\s*${startMarker}\\s*$(?:\\r\\n|\\n)?)([\\s\\S]*?)(?=(?:^#\\s*${endMarker}\\s*$|^#\\s*={10,}.*$))`, 'm');
             const match = content.match(regex);
-            return match && match[1] ? match[1].trim() : '';
+            
+            if (match && match[2]) {
+                // match[1] شامل خط مارکر شروع و خط جدید بعدشه
+                // match[2] شامل محتوای داخل بلوک هست
+                return match[1] + match[2].trim();
+            } else if (match && match[1]) {
+                // اگر محتوایی نباشه ولی مارکر شروع پیدا بشه (مثل بخش‌های پر شونده)
+                return match[1].trim();
+            }
+            return ''; // اگر پیدا نشد
         };
 
+        // استفاده از نشانگرهای جدید برای استخراج دقیق
         const globalSettingsSection = getFullSectionByMarkers('=== GLOBAL SETTINGS ===', '=== DNS SETTINGS ===', baseConfigContent);
         const dnsSection = getFullSectionByMarkers('=== DNS SETTINGS ===', '=== SNIFFER SETTINGS ===', baseConfigContent);
         const snifferSection = getFullSectionByMarkers('=== SNIFFER SETTINGS ===', '=== TUN SETTINGS ===', baseConfigContent);
         const tunSection = getFullSectionByMarkers('=== TUN SETTINGS ===', '=== RULE PROVIDERS SECTION START ===', baseConfigContent);
         const ntpSection = getFullSectionByMarkers('=== NTP SETTINGS START ===', '=== NTP SETTINGS END ===', baseConfigContent);
         
-        // اگر NTP در انتهای فایل باشه و بعدش چیزی نباشه، حالت خاص رو هم در نظر بگیریم
-        if (!ntpSection) { // اگر با نشانگر بالا پیدا نشد، شاید در انتها باشه بدون نشانگر پایان
-            const lastNtpRegex = /^ntp:([\s\S]*?)(?=(^#.*$)|$)/m; // میگیره تا کامنت بعدی یا انتهای فایل
-            const lastNtpMatch = baseConfigContent.match(lastNtpRegex);
-            if(lastNtpMatch) {
-                const preambleRegex = /^\s*(#.*)?\s*(ntp:)/m; // برای گرفتن خط NTP: و کامنت احتمالی
-                const preambleMatch = baseConfigContent.substring(lastNtpMatch.index).match(preambleRegex);
-                if (preambleMatch) {
-                    ntpSection = preambleMatch[0] + "\n" + lastNtpMatch[1].trim(); // اضافه کردن خط NTP: و محتوا
-                }
-            }
-        }
-        // -----------------------------------------------------
+        // --- End of: بازنگری نهایی استخراج بخش‌های ثابت ---
 
 
         // ----------------------------------------------------
@@ -594,16 +594,17 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalConfigOutput = [];
 
         // اضافه کردن بخش‌های ثابت به ترتیب (حالا با محتوای کامل)
-        if (globalSettingsSection) {
+        // اطمینان از اینکه خروجی‌ها خالی نباشند
+        if (globalSettingsSection && globalSettingsSection.length > 0) {
             finalConfigOutput.push(globalSettingsSection);
         }
-        if (dnsSection) {
+        if (dnsSection && dnsSection.length > 0) {
             finalConfigOutput.push(dnsSection);
         }
-        if (snifferSection) {
+        if (snifferSection && snifferSection.length > 0) {
             finalConfigOutput.push(snifferSection);
         }
-        if (tunSection) {
+        if (tunSection && tunSection.length > 0) {
             finalConfigOutput.push(tunSection);
         }
 
@@ -626,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
         finalConfigOutput.push(finalRulesList.join('\n')); 
 
         // بخش NTP
-        if (ntpSection) {
+        if (ntpSection && ntpSection.length > 0) {
             finalConfigOutput.push(ntpSection);
         }
 
