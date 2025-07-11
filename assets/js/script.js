@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="checkbox" id="${proxy.id}"
                         data-ip="${currentLanIp}"
                         data-port="${proxy.port}"
-                        data-name="${proxy.name}" // نام کامل شامل (LAN) از اینجا خوانده می‌شود
+                        data-name="${proxy.name}"
                         data-type="${proxy.type}"
                         data-udp="${proxy.udp}"
                         checked>
@@ -329,22 +329,18 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // فقط Rule ها رو در UI نمایش می‌دهیم، نه Rule Provider ها
         rulesToGenerate.forEach(rule => {
-            if (rule.hidden) return; // Rule های پنهان نباید نمایش داده شوند
+            if (rule.hidden) return;
             if (rule.group && categorizedRules[rule.group]) {
                 categorizedRules[rule.group].rules.push(rule);
             }
         });
 
-        // اصلاح: ساختار رندرینگ برای نمایش صحیح دسته‌بندی‌ها
         Object.keys(categorizedRules).sort((a, b) => {
-            // می‌توانید در اینجا منطق مرتب‌سازی دلخواه برای دسته‌ها اضافه کنید
-            // در حال حاضر بر اساس نام کلید دسته‌بندی مرتب می‌شود.
             return a.localeCompare(b);
         }).forEach(key => {
             const category = categorizedRules[key];
-            if (category.rules.length === 0) return; // اگر دسته‌بندی Rule ای ندارد، آن را نمایش نده
+            if (category.rules.length === 0) return;
 
             const categorySection = document.createElement('div');
             categorySection.className = 'rule-category-section';
@@ -354,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             categorySection.appendChild(categoryTitle);
 
             const categoryGrid = document.createElement('div');
-            categoryGrid.className = 'proxy-cards-grid'; // استفاده مجدد از کلاس grid
+            categoryGrid.className = 'proxy-cards-grid';
 
             category.rules.forEach(rule => {
                 const ruleItem = document.createElement('div');
@@ -512,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'rule_persian_blocker_rp',
             'rule_ads_rp',
             'rule_ban_easy_list_rp',
-            'rule_twitch_rp',
+            'rule_twitch_rp', // این قانون به گروه توییچ اشاره دارد
             'rule_telegram_process_exe',
             'rule_telegram_process_android',
             'rule_telegram_process_web',
@@ -602,7 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ----------------------------------------------------
         let generatedProxyGroupsYaml = [];
 
-        let allActiveProxyNames = new Set(); // نام پروکسی‌های فعال
+        let allActiveProxyNames = new Set();
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked, #customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             allActiveProxyNames.add(proxyName);
@@ -614,13 +610,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const baseProxyGroupsKeys = ['نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯', 'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'];
         baseProxyGroupsKeys.forEach(key => requiredPgKeys.add(key));
 
-        // اضافه کردن yamlKey تمامی گروه های پروکسی تعریف شده در predefinedProxyGroups 
-        // که در rulesToGenerate به آنها ارجاع شده اند.
-        // این تضمین می کند که اگر یک قانون به گروهی اشاره کرد، آن گروه در لیست نهایی ساخته شود.
+        // **مهم: اطمینان از اینکه تمامی گروه‌های پروکسی مربوط به قوانین فعال در لیست requiredPgKeys باشند**
+        // این بخش اضافه شد/تغییر یافت
         predefinedProxyGroups.forEach(pg => {
+            // Check if this proxy group is explicitly referenced by any active rule
             const isReferencedByActiveRule = selectedRules.some(rule => rule.relatedPgKey === pg.yamlKey);
+            // Check if this proxy group is one of the base groups
             const isBaseGroup = baseProxyGroupsKeys.includes(pg.yamlKey);
 
+            // اضافه کردن گروه به requiredPgKeys فقط اگر توسط یک قانون فعال ارجاع شده باشد
+            // یا اگر یکی از گروه‌های پایه باشد.
             if (isReferencedByActiveRule || isBaseGroup) {
                 requiredPgKeys.add(pg.yamlKey);
             }
