@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         data-port="${proxy.port}"
                         data-name="${proxy.name}"
                         data-type="${proxy.type}"
-                        data-udp="${proxy.udp}"
+                        data-udp="${proxy.udp ? 'true' : 'false'}"
                         checked>
                 <label for="${proxy.id}">
                     <h4>${proxy.name}</h4>
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             data-port="${proxy.port}"
                             data-name="${proxy.name}"
                             data-type="${proxy.type}"
-                            data-udp="${proxy.udp || true}"
+                            data-udp="${proxy.udp ? 'true' : 'false'}"
                             checked>
                     <label for="custom_${index}">
                         <h4>${proxy.name}</h4>
@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const proxyType = checkbox.dataset.type;
             const proxyServer = checkbox.dataset.ip;
             const proxyPort = checkbox.dataset.port;
-            const proxyUdp = checkbox.dataset.udp;
+            const proxyUdp = checkbox.dataset.udp === 'true'; // تبدیل به boolean
 
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
             if (proxyType === 'socks5' || proxyType === 'http') {
@@ -441,12 +441,12 @@ document.addEventListener('DOMContentLoaded', () => {
             generatedProxiesYaml.push(proxyYaml);
         });
 
-        document.querySelectorAll('#customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
+        document.querySelectorAll('#customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const proxyName = checkbox.dataset.name;
             const proxyType = checkbox.dataset.type;
             const proxyServer = checkbox.dataset.ip;
             const proxyPort = checkbox.dataset.port;
-            const proxyUdp = checkbox.dataset.udp;
+            const proxyUdp = checkbox.dataset.udp === 'true'; // تبدیل به boolean
 
             let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
             if (proxyType === 'socks5' || proxyType === 'http') {
@@ -566,42 +566,15 @@ document.addEventListener('DOMContentLoaded', () => {
         baseProxyGroupsKeys.forEach(key => requiredPgKeys.add(key));
 
         // **نکته کلیدی: اطمینان از افزودن تمامی گروه‌های پروکسی مورد نیاز به requiredPgKeys**
-        // این بخش باید تمام گروه‌هایی را که در predefinedProxyGroups تعریف شده‌اند و
-        // یا توسط قوانین فعال مورد نیاز هستند (relatedPgKey) و یا گروه‌های پایه هستند،
-        // به requiredPgKeys اضافه کند تا در فیلتر بعدی حذف نشوند.
+        // این بخش اطمینان می‌دهد که هر گروهی که توسط یک قانون فعال ارجاع شده است،
+        // یا یک گروه پایه است، در لیست نهایی گروه‌های پروکسی تولید شده باشد.
         predefinedProxyGroups.forEach(pg => {
-            // بررسی می‌کنیم که آیا این گروه پروکسی باید در خروجی باشد:
-            // 1. آیا این گروه پروکسی در حال حاضر در requiredPgKeys (از relatedPgKey قوانین فعال) هست؟
-            // 2. آیا این گروه پروکسی یک گروه پایه است؟
-            // 3. آیا این گروه پروکسی در لیست proxies یک گروه پروکسی دیگر (مثل "نوع انتخاب پروکسی") ارجاع داده شده و آن گروه نیز ساخته خواهد شد؟
-            //    برای مورد 3، نیاز به یک حلقه اضافی یا منطق پیچیده‌تر داریم تا وابستگی‌های تودرتو را حل کنیم.
-            //    برای سادگی و رفع مشکل فعلی، ما فرض می‌کنیم اگر یک قانون به آن اشاره کند، کافی است.
-            //    همچنین، گروه‌هایی که خودشان در لیست 'proxies' گروه‌های دیگر هستند، اگر گروه والدشان ساخته شود،
-            //    به صورت خودکار نامشان در لیست پروکسی‌های والد ظاهر خواهد شد و نیازی نیست به 'requiredPgKeys' اضافه شوند،
-            //    مگر اینکه بخواهیم خودشان هم به عنوان یک گروه در بالاترین سطح 'proxy-groups' تعریف شوند.
+            const trimmedPgYamlKey = pg.yamlKey.trim(); // برای اطمینان از حذف فضاهای خالی اضافی
+            const isReferencedByActiveRule = selectedRules.some(rule => rule.relatedPgKey === trimmedPgYamlKey);
+            const isBaseGroup = baseProxyGroupsKeys.includes(trimmedPgYamlKey);
 
-            // برای حل مشکل فعلی توییچ، کافی است که اطمینان حاصل کنیم 'توییچ 📡' که توسط 'rule_twitch_rp' ارجاع شده، به requiredPgKeys اضافه شود.
-            // این منطق قبلاً اضافه شده بود و باید کار کند.
-            // پس مشکل اصلی احتمالاً در یک کاراکتر نامرئی یا عدم تطابق دقیق رشته‌ای است.
-
-            // برای اطمینان بیشتر و حل احتمالی مشکل کاراکترهای نامرئی، می‌توانیم از .trim() استفاده کنیم:
-            const trimmedPgYamlKey = pg.yamlKey.trim();
-            if (requiredPgKeys.has(trimmedPgYamlKey) || baseProxyGroupsKeys.includes(trimmedPgYamlKey)) {
-                // اگر این گروه قبلا اضافه نشده بود، آن را اضافه کن.
-                // این خط کد باید کار کند اگر key ها واقعا یکسان باشند.
+            if (isReferencedByActiveRule || isBaseGroup) {
                 requiredPgKeys.add(trimmedPgYamlKey);
-            }
-        });
-
-        // **یک تغییر مهم و احتمالا راه حل نهایی:**
-        // به جای فیلتر کردن predefinedProxyGroups بر اساس requiredPgKeys،
-        // بیایید یک آرایه جدید از گروه‌های مورد نیاز بسازیم
-        // و اطمینان حاصل کنیم که همه گروه‌هایی که در requiredPgKeys هستند، در آن حضور دارند.
-        let finalRequiredGroups = [];
-        customProxyGroupOrder.forEach(key => {
-            const foundPg = predefinedProxyGroups.find(pg => pg.yamlKey === key);
-            if (foundPg && requiredPgKeys.has(key)) {
-                finalRequiredGroups.push(foundPg);
             }
         });
 
@@ -616,7 +589,16 @@ document.addEventListener('DOMContentLoaded', () => {
             'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'
         ];
 
-        // این خط دیگر نیاز به فیلتر کردن از `predefinedProxyGroups` ندارد، زیرا `finalRequiredGroups` را از بالا ساختیم.
+        // ساخت finalRequiredGroups از predefinedProxyGroups بر اساس requiredPgKeys
+        let finalRequiredGroups = [];
+        customProxyGroupOrder.forEach(key => {
+            const foundPg = predefinedProxyGroups.find(pg => pg.yamlKey === key);
+            if (foundPg && requiredPgKeys.has(key)) {
+                finalRequiredGroups.push(foundPg);
+            }
+        });
+
+        // حالا sortedRequiredGroups را از finalRequiredGroups که شامل گروه‌های مورد نیاز است، مرتب می‌کنیم
         let sortedRequiredGroups = finalRequiredGroups.sort((a, b) => {
             const indexA = customProxyGroupOrder.indexOf(a.yamlKey);
             const indexB = customProxyGroupOrder.indexOf(b.yamlKey);
