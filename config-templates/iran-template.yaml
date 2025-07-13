@@ -15,7 +15,6 @@ geo-update-interval: 168
 secret: ''
 bind-address: '*'
 unified-delay: false
-disable-keep-alive: false
 keep-alive-idle: 30
 keep-alive-interval: 30
 profile:
@@ -177,7 +176,7 @@ rule-providers:
     interval: 86400
 
 proxies:
-  ###_DYNAMIC_PROXIES_SECTION_### # Placeholder for dynamically generated proxies
+  # DYNAMIC_PROXIES_SECTION_PLACEHOLDER # Placeholder for dynamically generated proxies
 
 proxy-groups:
   - name: "نوع انتخاب پروکسی 🔀"
@@ -193,7 +192,7 @@ proxy-groups:
     type: select
     icon: https://www.svgrepo.com/show/372331/cursor-hand-click.svg
     proxies:
-      ###_PROXIES_LIST_PLACEHOLDER_### # Placeholder for dynamically generated proxy list
+      # PROXIES_LIST_PLACEHOLDER # Placeholder for dynamically generated proxy list
   - name: "خودکار (بهترین پینگ) 🤖"
     type: url-test
     icon: https://www.svgrepo.com/show/7876/speedometer.svg
@@ -204,7 +203,7 @@ proxy-groups:
     max-failed-times: 6
     lazy: true
     proxies:
-      ###_PROXIES_LIST_PLACEHOLDER_### # Placeholder for dynamically generated proxy list
+      # PROXIES_LIST_PLACEHOLDER # Placeholder for dynamically generated proxy list
   - name: "پشتیبان (در صورت قطعی) 🧯"
     type: fallback
     icon: https://www.svgrepo.com/show/415208/backup-cloud-document.svg
@@ -214,7 +213,7 @@ proxy-groups:
     max-failed-times: 3
     lazy: true
     proxies:
-      ###_PROXIES_LIST_PLACEHOLDER_### # Placeholder for dynamically generated proxy list
+      # PROXIES_LIST_PLACEHOLDER # Placeholder for dynamically generated proxy list
   - name: سایتای ایرانی 🇮🇷
     type: select
     icon: https://upload.wikimedia.org/wikipedia/commons/3/36/Flag_of_Iran_%28civil%29.svg

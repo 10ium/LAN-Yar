@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         saveCustomProxies();
-        renderCustomProxies(); // بازسازی لیست برای نمایش پروکسی‌های جدید/ویرایش شده با تمام IPها
+        renderCustomProxies(); // بازسازی لیست برای نمایش پروکسی‌های جدید/ویرایش شده با تمام IP‌ها
 
         // پاک کردن فیلدها
         customPortInput.value = '';
@@ -504,66 +504,31 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Generated Proxies YAML:", generatedProxiesYaml.join('\n\n'));
 
         // ----------------------------------------------------
-        // جایگزینی PLACEHOLDER_PROXIES_LIST در proxy-groups
+        // جایگزینی # PROXIES_LIST_PLACEHOLDER در proxy-groups
         // ----------------------------------------------------
         const sortedActiveProxyNames = Array.from(allSelectedProxyNames).sort().map(formatProxyRef);
         // اطمینان از اینکه لیست پروکسی‌ها به درستی با ایندنت (فاصله) برای YAML فرمت شود
-        // اگر لیست خالی باشد، یک خط خالی با دو فاصله اضافه کنید تا ساختار YAML بهم نریزد
-        const proxyListYaml = sortedActiveProxyNames.length > 0 
-            ? sortedActiveProxyNames.map(name => `      - ${name}`).join('\n')
-            : '      # No proxies selected for these groups'; // یک کامنت یا خط خالی برای زمانی که پروکسی انتخاب نشده
+        // ایندنت صحیح برای آیتم‌های لیست پروکسی در گروه‌ها 10 فاصله است.
+        const proxyListYamlContent = sortedActiveProxyNames.length > 0 
+            ? sortedActiveProxyNames.map(name => `          - ${name}`).join('\n') // 10 فاصله
+            : '          # No proxies selected for these groups'; // 10 فاصله
 
-        // استفاده از یک RegExp برای جایگزینی تمام رخدادهای PLACEHOLDER_PROXIES_LIST
-        // مهم: عبارت منظم باید دقیقاً الگوی placeholder را دنبال کند.
-        // /g برای جایگزینی تمامی رخدادها و /m برای فعال کردن حالت چند خطی (که ^ و $ روی خطوط کار کنند)
-        templateContent = templateContent.replace(/^- PLACEHOLDER_PROXIES_LIST/gm, proxyListYaml);
+        // استفاده از یک RegExp برای جایگزینی تمام رخدادهای # PROXIES_LIST_PLACEHOLDER
+        // /s* برای تطابق با هر فاصله ابتدایی، /g برای جایگزینی همه، /m برای فعال کردن حالت چند خطی (که ^ و $ روی خطوط کار کنند)
+        templateContent = templateContent.replace(/^\s*# PROXIES_LIST_PLACEHOLDER/gm, proxyListYamlContent);
 
 
         // ----------------------------------------------------
         // ترکیب نهایی تمامی بخش‌های کانفیگ YAML
         // ----------------------------------------------------
-        let finalConfigOutput = [];
-
-        // پیدا کردن محل درج proxies
-        // از یک Placeholder جدید برای بخش proxies: در تمپلت استفاده می‌کنیم تا جایگذاری دقیق‌تر باشد
-        // در فایل‌های template باید proxies: را به شکل زیر تغییر دهید:
-        // proxies:
-        //   DYNAMIC_PROXIES_SECTION_PLACEHOLDER
-
-        // ابتدا بخش proxies خود را به تمپلت اضافه کنید.
-        const proxiesPlaceholder = 'DYNAMIC_PROXIES_SECTION_PLACEHOLDER';
+        // پیدا کردن و جایگزینی # DYNAMIC_PROXIES_SECTION_PLACEHOLDER
         const proxiesSectionContent = generatedProxiesYaml.length > 0
             ? generatedProxiesYaml.join('\n\n')
-            : '  # No proxies selected.'; // اگر هیچ پروکسی انتخاب نشد
+            : '  # No proxies selected.'; // 2 فاصله برای کامنت
 
-        if (templateContent.includes(proxiesPlaceholder)) {
-            templateContent = templateContent.replace(proxiesPlaceholder, proxiesSectionContent);
-        } else {
-            // اگر placeholder پیدا نشد، سعی کنید به صورت دستی جایگذاری کنید (رویکرد قبلی)
-            // این بخش به دلیل تغییرات جدید در templateContent که از قبل proxies: را دارد، ممکن است پیچیده شود.
-            // بهترین راه این است که placeholder را در تمپلت خود قرار دهید.
-            // برای جلوگیری از خطا، اطمینان حاصل شود که 'proxies:' در ابتدای یک خط باشد.
-            const lines = templateContent.split('\n');
-            let foundProxiesHeader = false;
-            let inserted = false;
-            for (let i = 0; i < lines.length; i++) {
-                if (lines[i].trim() === 'proxies:') {
-                    lines.splice(i + 1, 0, proxiesSectionContent);
-                    inserted = true;
-                    break;
-                }
-            }
-            if(inserted){
-                templateContent = lines.join('\n');
-            } else {
-                 // اگر همچنان جای proxies: یافت نشد، آن را به انتها اضافه کنید
-                 if (generatedProxiesYaml.length > 0) {
-                     templateContent += '\n\nproxies:\n' + proxiesSectionContent;
-                 }
-            }
-        }
+        templateContent = templateContent.replace('  # DYNAMIC_PROXIES_SECTION_PLACEHOLDER', proxiesSectionContent);
         
-        outputConfigTextarea.value = templateContent.trim(); // دیگر نیازی به join('\n\n') نیست
+        outputConfigTextarea.value = templateContent.trim();
         downloadConfigBtn.style.display = 'block';
         hideLoading();
     });
