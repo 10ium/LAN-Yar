@@ -28,7 +28,7 @@ export const predefinedProxies = [
         name: 'Clash Mixed',
         ip: '192.168.1.3',
         port: '7892',
-        type: 'mixed',
+        type: 'socks5',
         udp: true,
         description: 'پورت Mixed Clash (HTTP/SOCKS) - 7892'
     },
@@ -37,7 +37,7 @@ export const predefinedProxies = [
         name: 'Clash TProxy',
         ip: '192.168.1.3',
         port: '7894',
-        type: 'tproxy',
+        type: 'socks5',
         udp: true,
         description: 'پورت tproxy Clash - 7894'
     },
@@ -46,7 +46,7 @@ export const predefinedProxies = [
         name: 'Clash Redir',
         ip: '192.168.1.3',
         port: '7893',
-        type: 'redir',
+        type: 'socks5',
         udp: true,
         description: 'پورت redir Clash - 7893'
     },
@@ -172,7 +172,7 @@ export const predefinedProxies = [
         name: 'Every Proxy PAC Server',
         ip: '192.168.1.3',
         port: '8081',
-        type: 'pac',
+        type: 'socks5',
         udp: true,
         description: 'Every proxy PAC server - پورت 8081'
     },
