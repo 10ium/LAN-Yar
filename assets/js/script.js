@@ -5,27 +5,99 @@ document.addEventListener('DOMContentLoaded', () => {
     // =======================================================
     // ۰. متغیرهای سراسری و عناصر DOM اصلی
     // =======================================================
-    let currentLanIp = '';
+    let currentLanIps = []; // تغییر به آرایه برای نگهداری چندین IP
 
     const mainContentWrapper = document.getElementById('mainContentWrapper');
     const footer = document.querySelector('footer');
-    const lanIpInput = document.getElementById('lanIpInput');
+    const lanIpInput = document.getElementById('lanIpInput'); // اکنون textarea است
     const validateLanIpBtn = document.getElementById('validateLanIpBtn');
 
     const loadingOverlay = document.getElementById('loadingOverlay');
     const loadingMessage = document.getElementById('loadingMessage');
 
+    // متغیر برای انتخاب قالب قوانین
+    const templateFullIranRulesRadio = document.getElementById('templateFullIranRules');
+    const templateIranOnlyRulesRadio = document.getElementById('templateIranOnlyRules');
+    const templateNoRulesRadio = document.getElementById('templateNoRules');
+
+    /**
+     * نمایش پوشش بارگذاری با یک پیام مشخص.
+     * @param {string} message - پیامی که باید نمایش داده شود.
+     */
     function showLoading(message = 'در حال پردازش...') {
         loadingMessage.textContent = message;
         loadingOverlay.classList.remove('hidden');
     }
 
+    /**
+     * پنهان کردن پوشش بارگذاری.
+     */
     function hideLoading() {
         loadingOverlay.classList.add('hidden');
     }
 
+    // نمایش پوشش بارگذاری در ابتدای لود شدن صفحه
     showLoading('در حال بارگذاری سایت...');
 
+    /**
+     * نمایش یک پیام سفارشی به کاربر (جایگزین alert).
+     * @param {string} message - متن پیام.
+     * @param {'info'|'success'|'error'} type - نوع پیام برای استایل‌دهی (info, success, error).
+     * @param {number} duration - مدت زمان نمایش پیام به میلی‌ثانیه.
+     */
+    function showCustomMessage(message, type = 'info', duration = 3000) {
+        const messageBox = document.createElement('div');
+        messageBox.className = `info-message ${type}-message`; // info-message از قبل استایل دارد
+        messageBox.textContent = message;
+
+        // اضافه کردن پیام به یک مکان ثابت، مثلاً بعد از هدر یا قبل از محتوای اصلی
+        const headerElement = document.querySelector('header');
+        if (headerElement) {
+            headerElement.after(messageBox);
+        } else {
+            document.body.prepend(messageBox); // اگر هدر نیست، به ابتدای بادی اضافه کن
+        }
+
+        setTimeout(() => {
+            messageBox.remove();
+        }, duration);
+    }
+
+    /**
+     * نمایش یک پنجره تأیید سفارشی (جایگزین confirm).
+     * @param {string} message - متن سوال تأیید.
+     * @param {function(boolean): void} callback - تابعی که پس از تأیید یا لغو فراخوانی می‌شود (true برای تأیید، false برای لغو).
+     */
+    function showCustomConfirm(message, callback) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+            z-index: 10000;
+        `;
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+            background-color: var(--panel-bg-color); padding: 25px; border-radius: 10px;
+            box-shadow: var(--box-shadow); text-align: center; max-width: 400px;
+            color: var(--text-color);
+        `;
+        modalContent.innerHTML = `
+            <p>${message}</p>
+            <button id="confirmYes" style="margin-left: 10px;">بله</button>
+            <button id="confirmNo">خیر</button>
+        `;
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        document.getElementById('confirmYes').onclick = () => {
+            modal.remove();
+            callback(true);
+        };
+        document.getElementById('confirmNo').onclick = () => {
+            modal.remove();
+            callback(false);
+        };
+    }
 
     // =======================================================
     // ۱. توابع اعتبارسنجی IP و پورت
@@ -58,25 +130,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     validateLanIpBtn.addEventListener('click', () => {
-        const ip = lanIpInput.value.trim();
-        if (isValidIP(ip)) {
-            currentLanIp = ip;
-            localStorage.setItem('lanIp', ip);
-            toggleContentEnabled(true);
-            alert(`آدرس IP LAN شما (${ip}) با موفقیت تأیید شد. حالا می‌توانید ادامه دهید.`);
-            renderPredefinedProxies();
-            loadCustomProxies();
-            renderRulesAndProviders();
+        const ipsInput = lanIpInput.value.trim();
+        const ipsArray = ipsInput.split(/[\n,]/).map(ip => ip.trim()).filter(ip => ip !== ''); // تقسیم بر اساس newline یا کاما
+
+        let allIpsValid = true;
+        if (ipsArray.length === 0) {
+            allIpsValid = false;
         } else {
-            currentLanIp = '';
-            localStorage.removeItem('lanIp');
+            for (const ip of ipsArray) {
+                if (!isValidIP(ip)) {
+                    allIpsValid = false;
+                    break;
+                }
+            }
+        }
+
+        if (allIpsValid) {
+            currentLanIps = ipsArray;
+            localStorage.setItem('lanIps', JSON.stringify(ipsArray)); // ذخیره آرایه IP ها
+            toggleContentEnabled(true);
+            showCustomMessage(`آدرس‌های IP LAN شما (${ipsArray.join(', ')}) با موفقیت تأیید شدند. حالا می‌توانید ادامه دهید.`, 'success');
+            renderPredefinedProxies();
+            loadCustomProxies(); // نیاز به بازسازی پروکسی‌های سفارشی با IPهای جدید
+        } else {
+            currentLanIps = [];
+            localStorage.removeItem('lanIps');
             toggleContentEnabled(false);
-            alert('لطفاً یک آدرس IP معتبر LAN وارد کنید تا ادامه دهید.');
+            showCustomMessage('لطفاً حداقل یک آدرس IP معتبر LAN وارد کنید تا ادامه دهید.', 'error');
             lanIpInput.focus();
         }
     });
 
     lanIpInput.addEventListener('input', () => {
+        // هر تغییری در ورودی IP، محتوا را غیرفعال می‌کند تا کاربر مجدداً تأیید کند
         toggleContentEnabled(false);
     });
 
@@ -117,11 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // =======================================================
-    // ۴. مدیریت انتخاب تمپلت کانفیگ (بخش مربوطه حذف شد)
-    // =======================================================
-
-    // =======================================================
-    // ۵. مدیریت پروکسی‌های پیش‌فرض
+    // ۴. مدیریت پروکسی‌های پیش‌فرض
     // =======================================================
     const predefinedProxiesList = document.getElementById('predefinedProxiesList');
     const selectAllPredefinedProxiesBtn = document.getElementById('selectAllPredefinedProxies');
@@ -129,29 +211,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderPredefinedProxies() {
         predefinedProxiesList.innerHTML = '';
-        if (!currentLanIp) {
-            predefinedProxiesList.innerHTML = `<p class="info-message">لطفاً ابتدا آدرس IP دستگاه VPN (LAN) را در بخش ۱ وارد کنید.</p>`;
+        if (currentLanIps.length === 0) {
+            predefinedProxiesList.innerHTML = `<p class="info-message">لطفاً ابتدا آدرس‌های IP دستگاه VPN (LAN) را در بخش ۱ وارد کنید.</p>`;
             return;
         }
 
-        predefinedProxies.forEach(proxy => {
-            const proxyCard = document.createElement('div');
-            proxyCard.className = 'proxy-card';
-            proxyCard.innerHTML = `
-                <input type="checkbox" id="${proxy.id}"
-                        data-ip="${currentLanIp}"
-                        data-port="${proxy.port}"
-                        data-name="${proxy.name}"
-                        data-type="${proxy.type}"
-                        data-udp="${proxy.udp === true ? 'true' : 'false'}"
-                        checked>
-                <label for="${proxy.id}">
-                    <h4>${proxy.name}</h4>
-                    <p>IP: <code>${currentLanIp}</code> | پورت: <code>${proxy.port}</code></p>
-                    ${proxy.description ? `<p class="description">${proxy.description}</p>` : ''}
-                </label>
-            `;
-            predefinedProxiesList.appendChild(proxyCard);
+        currentLanIps.forEach(ip => {
+            predefinedProxies.forEach(proxyTemplate => {
+                const uniqueId = `${proxyTemplate.id}_${ip.replace(/\./g, '_')}`; // شناسه منحصر به فرد برای هر IP
+                const uniqueName = `${proxyTemplate.name} (${ip})`; // نام منحصر به فرد برای نمایش
+                
+                const proxyCard = document.createElement('div');
+                proxyCard.className = 'proxy-card';
+                proxyCard.innerHTML = `
+                    <input type="checkbox" id="${uniqueId}"
+                            data-ip="${ip}"
+                            data-port="${proxyTemplate.port}"
+                            data-name="${uniqueName}"
+                            data-type="${proxyTemplate.type}"
+                            data-udp="${proxyTemplate.udp === true ? 'true' : 'false'}"
+                            checked>
+                    <label for="${uniqueId}">
+                        <h4>${uniqueName}</h4>
+                        <p>IP: <code>${ip}</code> | پورت: <code>${proxyTemplate.port}</code></p>
+                        ${proxyTemplate.description ? `<p class="description">${proxyTemplate.description}</p>` : ''}
+                    </label>
+                `;
+                predefinedProxiesList.appendChild(proxyCard);
+            });
         });
     }
 
@@ -169,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =======================================================
-    // ۶. مدیریت پروکسی‌های کاستوم کاربر (ذخیره در localStorage کاربر)
+    // ۵. مدیریت پروکسی‌های کاستوم کاربر (ذخیره در localStorage کاربر)
     // =======================================================
     const customPortInput = document.getElementById('customPortInput');
     const customNameInput = document.getElementById('customNameInput');
@@ -178,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const customProxiesList = document.getElementById('customProxiesList');
     const noCustomConfigsMessage = document.getElementById('noCustomConfigsMessage');
 
-    let userCustomProxies = [];
+    let userCustomProxies = []; // این آرایه فقط نام، پورت و نوع را ذخیره می‌کند، IP در زمان رندر/تولید اضافه می‌شود
 
     function loadCustomProxies() {
         const storedProxies = localStorage.getItem('userCustomMiHoMoProxies');
@@ -203,46 +290,57 @@ document.addEventListener('DOMContentLoaded', () => {
             noCustomConfigsMessage.style.display = 'block';
         } else {
             noCustomConfigsMessage.style.display = 'none';
-            userCustomProxies.forEach((proxy, index) => {
-                const proxyCard = document.createElement('div');
-                proxyCard.className = 'proxy-card';
-                proxyCard.innerHTML = `
-                    <input type="checkbox" id="custom_${index}"
-                            data-ip="${currentLanIp}"
-                            data-port="${proxy.port}"
-                            data-name="${proxy.name}"
-                            data-type="${proxy.type}"
-                            data-udp="${proxy.udp === true ? 'true' : 'false'}"
-                            checked>
-                    <label for="custom_${index}">
-                        <h4>${proxy.name}</h4>
-                        <p>IP: <code>${currentLanIp}</code> | پورت: <code>${proxy.port}</code></p>
-                        <p class="description">نوع: <code>${proxy.type.toUpperCase()}</code></p>
-                    </label>
-                    <div class="actions">
-                        <button class="edit-custom-proxy-btn" data-index="${index}" title="ویرایش">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-custom-proxy-btn" data-index="${index}" title="حذف">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                `;
-                customProxiesList.appendChild(proxyCard);
+            if (currentLanIps.length === 0) {
+                customProxiesList.innerHTML = `<p class="info-message">برای نمایش پروکسی‌های کاستوم، لطفاً ابتدا آدرس‌های IP دستگاه VPN (LAN) را در بخش ۱ وارد کنید.</p>`;
+                return;
+            }
+
+            userCustomProxies.forEach((proxyTemplate, originalIndex) => {
+                currentLanIps.forEach(ip => {
+                    const uniqueId = `custom_${originalIndex}_${ip.replace(/\./g, '_')}`; // شناسه منحصر به فرد
+                    const uniqueName = `${proxyTemplate.name} (${ip})`; // نام منحصر به فرد
+                    
+                    const proxyCard = document.createElement('div');
+                    proxyCard.className = 'proxy-card';
+                    proxyCard.innerHTML = `
+                        <input type="checkbox" id="${uniqueId}"
+                                data-ip="${ip}"
+                                data-port="${proxyTemplate.port}"
+                                data-name="${uniqueName}"
+                                data-type="${proxyTemplate.type}"
+                                data-udp="${proxyTemplate.udp === true ? 'true' : 'false'}"
+                                checked>
+                        <label for="${uniqueId}">
+                            <h4>${uniqueName}</h4>
+                            <p>IP: <code>${ip}</code> | پورت: <code>${proxyTemplate.port}</code></p>
+                            <p class="description">نوع: <code>${proxyTemplate.type.toUpperCase()}</code></p>
+                        </label>
+                        <div class="actions">
+                            <button class="edit-custom-proxy-btn" data-original-index="${originalIndex}" title="ویرایش">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="delete-custom-proxy-btn" data-original-index="${originalIndex}" title="حذف">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    `;
+                    customProxiesList.appendChild(proxyCard);
+                });
             });
         }
 
+        // رویدادها را به دکمه‌های ویرایش و حذف اضافه کنید
         document.querySelectorAll('.edit-custom-proxy-btn').forEach(button => {
             button.addEventListener('click', (event) => {
-                const index = event.currentTarget.dataset.index;
-                editCustomProxy(parseInt(index));
+                const originalIndex = event.currentTarget.dataset.originalIndex;
+                editCustomProxy(parseInt(originalIndex));
             });
         });
 
         document.querySelectorAll('.delete-custom-proxy-btn').forEach(button => {
             button.addEventListener('click', (event) => {
-                const index = event.currentTarget.dataset.index;
-                deleteCustomProxy(parseInt(index));
+                const originalIndex = event.currentTarget.dataset.originalIndex;
+                deleteCustomProxy(parseInt(originalIndex));
             });
         });
     }
@@ -253,139 +351,66 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = customTypeInput.value;
 
         if (!isValidPort(port)) {
-            alert("لطفاً یک شماره پورت معتبر بین 1 تا 65535 وارد کنید.");
+            showCustomMessage("لطفاً یک شماره پورت معتبر بین 1 تا 65535 وارد کنید.", 'error');
             customPortInput.focus();
             return;
         }
 
         if (name === "") {
-            alert("لطفاً یک نام برای سرور کاستوم وارد کنید.");
+            showCustomMessage("لطفاً یک نام برای سرور کاستوم وارد کنید.", 'error');
             customNameInput.focus();
             return;
         }
 
-        if (!currentLanIp) {
-            alert("لطفاً ابتدا آدرس IP دستگاه VPN (LAN) را در بخش ۱ وارد و تأیید کنید.");
+        if (currentLanIps.length === 0) {
+            showCustomMessage("لطفاً ابتدا آدرس‌های IP دستگاه VPN (LAN) را در بخش ۱ وارد و تأیید کنید.", 'error');
             lanIpInput.focus();
             return;
         }
 
+        // اگر در حال ویرایش هستیم
         if (addCustomProxyBtn.dataset.editingIndex !== undefined) {
             const index = parseInt(addCustomProxyBtn.dataset.editingIndex);
             userCustomProxies[index] = { port, name, type, udp: true };
-            delete addCustomProxyBtn.dataset.editingIndex;
-            addCustomProxyBtn.textContent = 'افزودن سرور کاستوم';
+            delete addCustomProxyBtn.dataset.editingIndex; // حذف حالت ویرایش
+            addCustomProxyBtn.textContent = 'افزودن سرور'; // بازگرداندن متن دکمه
         } else {
+            // در غیر این صورت، پروکسی جدید اضافه کن
             userCustomProxies.push({ port, name, type, udp: true });
         }
 
         saveCustomProxies();
-        renderCustomProxies();
+        renderCustomProxies(); // بازسازی لیست برای نمایش پروکسی‌های جدید/ویرایش شده با تمام IPها
 
+        // پاک کردن فیلدها
         customPortInput.value = '';
         customNameInput.value = '';
         customTypeInput.value = 'socks5';
     });
 
-    function editCustomProxy(index) {
-        const proxy = userCustomProxies[index];
+    function editCustomProxy(originalIndex) {
+        const proxy = userCustomProxies[originalIndex];
         customPortInput.value = proxy.port;
         customNameInput.value = proxy.name;
         customTypeInput.value = proxy.type || 'socks5';
 
         addCustomProxyBtn.textContent = 'به‌روزرسانی سرور';
-        addCustomProxyBtn.dataset.editingIndex = index;
+        addCustomProxyBtn.dataset.editingIndex = originalIndex; // ذخیره ایندکس اصلی برای ویرایش
         customPortInput.focus();
     }
 
-    function deleteCustomProxy(index) {
-        if (confirm("آیا از حذف این سرور کاستوم مطمئن هستید؟")) {
-            userCustomProxies.splice(index, 1);
-            saveCustomProxies();
-            renderCustomProxies();
-        }
-    }
-
-    // =======================================================
-    // ۷. مدیریت قوانین و گروه‌های پروکسی (رندر دسته‌بندی شده)
-    // =======================================================
-    const rulesCheckboxesContainer = document.getElementById('rulesCheckboxes');
-    const selectAllRulesBtn = document.getElementById('selectAllRules');
-    const deselectAllRulesBtn = document.getElementById('deselectAllRules');
-
-    function renderRulesAndProviders() {
-        rulesCheckboxesContainer.innerHTML = '';
-
-        const categorizedRules = {};
-        ruleCategories.forEach(cat => {
-            categorizedRules[cat.key] = {
-                name: cat.name,
-                icon: cat.icon,
-                rules: [],
-            };
-        });
-
-        rulesToGenerate.forEach(rule => {
-            if (rule.hidden) return;
-            if (rule.group && categorizedRules[rule.group]) {
-                categorizedRules[rule.group].rules.push(rule);
+    function deleteCustomProxy(originalIndex) {
+        showCustomConfirm("آیا از حذف این سرور کاستوم مطمئن هستید؟", (result) => {
+            if (result) {
+                userCustomProxies.splice(originalIndex, 1);
+                saveCustomProxies();
+                renderCustomProxies();
             }
         });
-
-        Object.keys(categorizedRules).sort((a, b) => {
-            return a.localeCompare(b);
-        }).forEach(key => {
-            const category = categorizedRules[key];
-            if (category.rules.length === 0) return;
-
-            const categorySection = document.createElement('div');
-            categorySection.className = 'rule-category-section';
-
-            const categoryTitle = document.createElement('h3');
-            categoryTitle.innerHTML = `<i class="${category.icon}"></i> ${category.name}`;
-            categorySection.appendChild(categoryTitle);
-
-            const categoryGrid = document.createElement('div');
-            categoryGrid.className = 'proxy-cards-grid';
-
-            category.rules.forEach(rule => {
-                const ruleItem = document.createElement('div');
-                ruleItem.className = 'rule-item';
-                ruleItem.innerHTML = `
-                    <input type="checkbox"
-                                 id="${rule.id}"
-                                 data-rule-string="${rule.ruleString}"
-                                 data-type="rule"
-                                 ${rule.defaultChecked ? 'checked' : ''}
-                                 ${rule.relatedRuleProvider ? `data-related-rp="${rule.relatedRuleProvider}"` : ''}
-                                 ${rule.relatedProxyGroup ? `data-related-pg="${rule.relatedProxyGroup}"` : ''}>
-                    <label for="${rule.id}">
-                        <h4>${rule.name}</h4>
-                        <p class="description">${rule.description || ''}</p>
-                    </label>
-                `;
-                categoryGrid.appendChild(ruleItem);
-            });
-            categorySection.appendChild(categoryGrid);
-            rulesCheckboxesContainer.appendChild(categorySection);
-        });
     }
 
-    selectAllRulesBtn.addEventListener('click', () => {
-        document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]').forEach(checkbox => {
-            checkbox.checked = true;
-        });
-    });
-
-    deselectAllRulesBtn.addEventListener('click', () => {
-        document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]').forEach(checkbox => {
-            checkbox.checked = false;
-        });
-    });
-
-
     // =======================================================
-    // ۸. تولید و دانلود کانفیگ نهایی MiHoMo
+    // ۶. تولید و دانلود کانفیگ نهایی MiHoMo
     // =======================================================
     const generateConfigBtn = document.getElementById('generateConfigBtn');
     const outputConfigTextarea = document.getElementById('outputConfig');
@@ -396,346 +421,122 @@ document.addEventListener('DOMContentLoaded', () => {
         outputConfigTextarea.value = '';
         downloadConfigBtn.style.display = 'none';
 
-        if (!currentLanIp) {
-            alert('لطفاً ابتدا آدرس IP دستگاه VPN (LAN) را در بخش ۱ وارد و تأیید کنید.');
+        if (currentLanIps.length === 0) {
+            showCustomMessage('لطفاً ابتدا آدرس‌های IP دستگاه VPN (LAN) را در بخش ۱ وارد و تأیید کنید.', 'error');
             outputConfigTextarea.value = '';
             lanIpInput.focus();
             hideLoading();
             return;
         }
 
-        let baseConfigContent = '';
-
+        let templateContent = '';
         const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-        const defaultTemplateUrl = baseUrl + 'config-templates/default-mihomo-template.yaml';
+        let selectedTemplateFile = '';
+        const selectedTemplate = document.querySelector('input[name="configTemplate"]:checked').value;
+
+        if (selectedTemplate === 'full-iran-rules') {
+            selectedTemplateFile = 'full-rule-template.yaml';
+        } else if (selectedTemplate === 'iran-only-rules') {
+            selectedTemplateFile = 'iran-template.yaml';
+        } else if (selectedTemplate === 'no-rules') {
+            selectedTemplateFile = 'no-rule-template.yaml';
+        }
+
+        const templatePath = baseUrl + 'config-templates/' + selectedTemplateFile;
 
         try {
-            const response = await fetch(defaultTemplateUrl);
+            const response = await fetch(templatePath);
             if (!response.ok) {
-                throw new Error(`خطا در بارگذاری تمپلت پیش‌فرض: ${response.statusText || 'Failed to fetch'}. مطمئن شوید فایل default-mihomo-template.yaml در مسیر درست قرار دارد و دسترسی به آن امکان‌پذیر است.`);
+                throw new Error(`خطا در بارگذاری تمپلت: ${response.statusText || 'Failed to fetch'}. مطمئن شوید فایل ${selectedTemplateFile} در مسیر درست قرار دارد و دسترسی به آن امکان‌پذیر است.`);
             }
-            baseConfigContent = await response.text();
-            console.log("Template content loaded successfully.");
+            templateContent = await response.text();
+            console.log(`Template ${selectedTemplateFile} loaded successfully.`);
         } catch (error) {
-            alert(`خطا در بارگذاری تمپلت پیش‌فرض: ${error.message}`);
+            showCustomMessage(`خطا در بارگذاری تمپلت: ${error.message}`, 'error', 5000);
             outputConfigTextarea.value = '';
             hideLoading();
             return;
         }
 
         // ----------------------------------------------------
-        // تولید بخش 'proxies' (بر اساس انتخاب کاربر در UI)
+        // تولید بخش 'proxies' (بر اساس انتخاب کاربر در UI و تمامی IPها)
         // ----------------------------------------------------
         let generatedProxiesYaml = [];
-        document.querySelectorAll('#predefinedProxiesList input[type="checkbox']:checked').forEach(checkbox => {
-            const proxyName = checkbox.dataset.name;
-            const proxyType = checkbox.dataset.type;
-            const proxyServer = checkbox.dataset.ip;
-            const proxyPort = checkbox.dataset.port;
-            const proxyUdp = checkbox.dataset.udp === 'true'; // تبدیل به boolean
-
-            let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
-            if (proxyType === 'socks5' || proxyType === 'http') {
-                proxyYaml += `\n    udp: ${proxyUdp}`;
-            }
-            generatedProxiesYaml.push(proxyYaml);
-        });
-
-        document.querySelectorAll('#customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
-            const proxyName = checkbox.dataset.name;
-            const proxyType = checkbox.dataset.type;
-            const proxyServer = checkbox.dataset.ip;
-            const proxyPort = checkbox.dataset.port;
-            const proxyUdp = checkbox.dataset.udp === 'true'; // تبدیل به boolean
-
-            let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${proxyServer}\n    port: ${proxyPort}`;
-            if (proxyType === 'socks5' || proxyType === 'http') {
-                proxyYaml += `\n    udp: ${proxyUdp}`;
-            }
-            generatedProxiesYaml.push(proxyYaml);
-        });
-        console.log("Generated Proxies YAML:", generatedProxiesYaml.join('\n\n'));
-
-
-        // ----------------------------------------------------
-        // تولید بخش 'rule-providers' (بر اساس Rule های انتخاب شده)
-        // ----------------------------------------------------
-        let generatedRuleProvidersYaml = [];
-        let requiredRpKeys = new Set();
-
-        document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]:checked').forEach(checkbox => {
-            const relatedRpKey = checkbox.dataset.relatedRp;
-            if (relatedRpKey) {
-                requiredRpKeys.add(relatedRpKey);
-            }
-        });
-
-        predefinedRuleProviders.forEach(rp => {
-            if (requiredRpKeys.has(rp.yamlKey)) {
-                generatedRuleProvidersYaml.push(`  ${rp.yamlKey}:
-    type: http
-    behavior: ${rp.behavior}
-    url: ${rp.url}
-    interval: 86400
-    path: ./ruleset/${rp.yamlKey}.yaml`);
-            }
-        });
-        console.log("Generated Rule Providers YAML:", generatedRuleProvidersYaml.join('\n'));
-
-
-        // ----------------------------------------------------
-        // تولید بخش 'rules' (فقط Rule های انتخاب شده توسط کاربر)
-        // ----------------------------------------------------
-        const customRuleOrder = [
-            'rule_download_managers_rp', 'rule_download_rp', 'rule_stremio_rp_full',
-            'rule_ban_program_ad_rp', 'rule_ban_ad_rp', 'rule_private_tracker_rp',
-            'rule_category_public_tracker_rp', 'rule_malware_rp', 'rule_phishing_rp',
-            'rule_cryptominers_rp', 'rule_warninglist_rp', 'rule_ponzi_rp',
-            'rule_liteads_rp', 'rule_iran_ads_rp', 'rule_persian_blocker_rp',
-            'rule_ads_rp', 'rule_ban_easy_list_rp', 'rule_twitch_rp',
-            'rule_telegram_process_exe', 'rule_telegram_process_android', 'rule_telegram_process_web',
-            'rule_telegram_rp', 'rule_youtube_rp_full', 'rule_youtube_rp',
-            'rule_youtube_music_rp', 'rule_instagram_process_android', 'rule_instagram_rp',
-            'rule_ai_deepseek', 'rule_ai_qwen', 'rule_category_ai_rp',
-            'rule_censor_rp_full', 'rule_apps_rp', 'rule_iran_rp',
-            'rule_arvancloud_rp', 'rule_derakcloud_rp', 'rule_iranserver_rp',
-            'rule_parspack_rp', 'rule_irasn_rp', 'rule_ircidr',
-            'rule_ir_rp_full', 'rule_category_ir_rp', 'rule_whatsapp_rp',
-            'rule_steam_game_rp', 'rule_steam_region_check_rp_full', 'rule_game_rp_full',
-            'rule_game_download_rp_full', 'rule_category_games_rp_full', 'rule_xbox_rp_full',
-            'rule_discord_rp_full', 'rule_xiaomi_white_list_rp_full', 'rule_xiaomi_ads_rp_full',
-            'rule_xiaomi_block_list_rp_full', 'rule_windows_rp_full',
-            'rule_cloudflare_rp_full', 'rule_github_rp_full',
-            'rule_google_play_process_android_vending', 'rule_google_play_process_android_gms',
-            'rule_google_play_rp_full', 'rule_google_rp_full',
-            'rule_local_ips_rp', 'rule_private_rp'
-        ];
-
-        let selectedRules = [];
-        let requiredPgKeys = new Set();
-
-        document.querySelectorAll('#rulesCheckboxes input[type="checkbox"]:checked').forEach(checkbox => {
-            const ruleId = checkbox.id;
-            const ruleString = checkbox.dataset.ruleString;
-            // Normalize relatedPgKey when reading from dataset
-            const relatedPgKey = typeof checkbox.dataset.relatedPg === 'string' ? checkbox.dataset.relatedPg.normalize('NFC').trim() : null;
-
-            selectedRules.push({
-                id: ruleId,
-                ruleString: ruleString,
-                relatedPgKey: relatedPgKey
-            });
-
-            if (relatedPgKey) {
-                requiredPgKeys.add(relatedPgKey);
-            }
-        });
-
-        selectedRules.sort((a, b) => {
-            const indexA = customRuleOrder.indexOf(a.id);
-            const indexB = customRuleOrder.indexOf(b.id);
-
-            if (indexA === -1 && indexB === -1) return 0;
-            if (indexA === -1) return 1;
-            if (indexB === -1) return -1;
-
-            return indexA - indexB;
-        });
-
-        let finalRulesList = selectedRules.map(rule => `  - ${rule.ruleString}`);
-
-        finalRulesList.push(`  - IP-CIDR,10.10.34.0/24,نوع انتخاب پروکسی 🔀`);
-        finalRulesList.push(`  - MATCH,نوع انتخاب پروکسی 🔀`);
-        // Normalize the base key when adding to requiredPgKeys
-        requiredPgKeys.add('نوع انتخاب پروکسی 🔀'.normalize('NFC').trim());
-        console.log("Final Rules List:", finalRulesList.join('\n'));
-
-
-        // ----------------------------------------------------
-        // تولید بخش 'proxy-groups' (بر اساس Rule ها و گروه‌های پایه)
-        // ----------------------------------------------------
-        let generatedProxyGroupsYaml = [];
-
-        let allActiveProxyNames = new Set();
-        document.querySelectorAll('#predefinedProxiesList input[type="checkbox']:checked, #customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
-            // Normalize proxy names when adding to allActiveProxyNames
-            const proxyName = typeof checkbox.dataset.name === 'string' ? checkbox.dataset.name.normalize('NFC').trim() : null;
-            if (proxyName) {
-                allActiveProxyNames.add(proxyName);
-            }
-        });
-        console.log("All active proxy names:", Array.from(allActiveProxyNames));
-
-
-        const baseProxyGroupsKeys = [
-            'نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯',
-            'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'
-        ].map(key => key.normalize('NFC').trim()); // Normalize base keys once on creation
-
-        baseProxyGroupsKeys.forEach(key => requiredPgKeys.add(key));
-
-        predefinedProxyGroups.forEach(pg => {
-            // Normalize pg.yamlKey when checking against requiredPgKeys
-            const normalizedPgYamlKey = typeof pg.yamlKey === 'string' ? pg.yamlKey.normalize('NFC').trim() : null;
-            
-            if (!normalizedPgYamlKey) {
-                return; 
-            }
-
-            // Check if this proxy group is explicitly referenced by any active rule
-            const isReferencedByActiveRule = selectedRules.some(rule => rule.relatedPgKey === normalizedPgYamlKey);
-
-            // Check if this proxy group is one of the base groups
-            const isBaseGroup = baseProxyGroupsKeys.includes(normalizedPgYamlKey);
-
-            if (isReferencedByActiveRule || isBaseGroup) {
-                requiredPgKeys.add(normalizedPgYamlKey);
-            }
-        });
-
-        console.log("Required Proxy Groups Keys (after processing all rules and base groups):", Array.from(requiredPgKeys));
-
-
-        const customProxyGroupOrder = [
-            'نوع انتخاب پروکسی 🔀', 'دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯',
-            'دانلود منیجر 📥', 'تلگرام 💬', 'یوتیوب ▶️', 'گوگل 🌍', 'واتس آپ 🟢',
-            'هوش مصنوعی 🤖', 'اینستاگرام 📸', 'تبلیغات 🆎', 'تبلیغات اپ ها 🍃',
-            'رهگیری جهانی 🛑', 'سایتای مخرب ⚠️', 'استیم 🖥️', 'گیم 🎮', 'توییچ 📡',
-            'سایتای ایرانی 🇮🇷', 'ویندوز 🧊', 'کلودفلر ☁️', 'گیتهاب 🐙', 'دیسکورد 🗣️',
-            'استریمیو 🎬', 'سایتای سانسوری 🤬',
-            'بدون فیلترشکن 🛡️', 'قطع اینترنت ⛔', 'اجازه ندادن 🚫'
-        ].map(key => key.normalize('NFC').trim()); // Normalize order keys once on creation
-
-        // ساخت finalRequiredGroups از predefinedProxyGroups بر اساس requiredPgKeys
-        let finalRequiredGroups = [];
-        customProxyGroupOrder.forEach(normalizedKeyFromOrder => { // Use normalized key here
-            if (normalizedKeyFromOrder && requiredPgKeys.has(normalizedKeyFromOrder)) {
-                // Find the original object from predefinedProxyGroups by its normalized yamlKey
-                const foundPg = predefinedProxyGroups.find(pg => {
-                    const pgYamlKeyNormalized = typeof pg.yamlKey === 'string' ? pg.yamlKey.normalize('NFC').trim() : null;
-                    return pgYamlKeyNormalized === normalizedKeyFromOrder;
-                });
-                if (foundPg) {
-                    finalRequiredGroups.push(foundPg);
-                }
-            }
-        });
-
-        let sortedRequiredGroups = finalRequiredGroups.sort((a, b) => {
-            // Compare by the index of their normalized yamlKey in the normalized customProxyGroupOrder
-            const indexA = customProxyGroupOrder.indexOf(a.yamlKey.normalize('NFC').trim());
-            const indexB = customProxyGroupOrder.indexOf(b.yamlKey.normalize('NFC').trim());
-
-            if (indexA === -1 && indexB === -1) return 0;
-            if (indexA === -1) return 1;
-            if (indexB === -1) return -1;
-
-            return indexA - indexB;
-        });
-        console.log("Sorted required proxy groups:", sortedRequiredGroups.map(g => g.yamlKey));
-
-
         const formatProxyRef = (name) => {
             return `"${name}"`;
         };
 
+        let allSelectedProxyNames = new Set(); // برای نگهداری نام‌های منحصر به فرد پروکسی‌های فعال
 
-        sortedRequiredGroups.forEach(pg => {
-            let groupContent = `  - name: "${pg.yamlKey}"\n    type: ${pg.type}`; // Use original pg.yamlKey for output
-            if (pg.icon) groupContent += `\n    icon: ${pg.icon}`;
-            if (pg.url) groupContent += `\n    url: ${pg.url}`;
-            if (pg.interval) groupContent += `\n    interval: ${pg.interval}`;
-            if (pg.timeout) groupContent += `\n    timeout: ${pg.timeout}`;
-            if (pg.tolerance) groupContent += `\n    tolerance: ${pg.tolerance}`;
-            if (pg.max_failed_times) groupContent += `\n    max-failed-times: ${pg.max_failed_times}`;
-            if (pg.lazy !== undefined) groupContent += `\n    lazy: ${pg.lazy}`;
-            if (pg.hidden !== undefined) groupContent += `\n    hidden: ${pg.hidden}`;
+        // جمع‌آوری پروکسی‌های پیش‌فرض برای هر IP
+        document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
+            const ip = checkbox.dataset.ip;
+            const proxyTemplateName = checkbox.dataset.name; // نام کامل شامل IP
+            const proxyType = checkbox.dataset.type;
+            const proxyPort = checkbox.dataset.port;
+            const proxyUdp = checkbox.dataset.udp === 'true';
 
-            groupContent += `\n    proxies:`;
-
-            const groupProxiesList = [];
-
-            // Compare using normalized keys for better reliability
-            const normalizedPgYamlKeyForComparison = pg.yamlKey.normalize('NFC').trim();
-
-            if (normalizedPgYamlKeyForComparison === 'بدون فیلترشکن 🛡️'.normalize('NFC').trim()) {
-                groupProxiesList.push('DIRECT');
-            } else if (normalizedPgYamlKeyForComparison === 'قطع اینترنت ⛔'.normalize('NFC').trim() || normalizedPgYamlKeyForComparison === 'اجازه ندادن 🚫'.normalize('NFC').trim()) {
-                groupProxiesList.push('REJECT');
-            } else if (['دستی 🤏🏻', 'خودکار (بهترین پینگ) 🤖', 'پشتیبان (در صورت قطعی) 🧯'].map(k => k.normalize('NFC').trim()).includes(normalizedPgYamlKeyForComparison)) {
-                Array.from(allActiveProxyNames).sort().forEach(proxyName => {
-                    groupProxiesList.push(formatProxyRef(proxyName));
-                });
-            } else if (normalizedPgYamlKeyForComparison === 'نوع انتخاب پروکسی 🔀'.normalize('NFC').trim()) {
-                const desiredOrderForSelectProxyType = [
-                    'خودکار (بهترین پینگ) 🤖',
-                    'پشتیبان (در صورت قطعی) 🧯',
-                    'دستی 🤏🏻',
-                    'قطع اینترنت ⛔',
-                    'بدون فیلترشکن 🛡️'
-                ].map(key => key.normalize('NFC').trim());
-
-                desiredOrderForSelectProxyType.forEach(groupName => {
-                    if (requiredPgKeys.has(groupName)) { // requiredPgKeys already holds normalized keys
-                        // Find the original name from predefinedProxyGroups to use for formatting
-                        const originalGroupName = predefinedProxyGroups.find(p => p.yamlKey.normalize('NFC').trim() === groupName)?.yamlKey;
-                        if (originalGroupName) {
-                            groupProxiesList.push(formatProxyRef(originalGroupName));
-                        }
-                    }
-                });
-            } else {
-                const templateProxies = pg.proxies || [];
-                templateProxies.forEach(proxyRef => {
-                    const normalizedProxyRef = typeof proxyRef === 'string' ? proxyRef.normalize('NFC').trim() : null;
-                    // For DIRECT/REJECT, handle explicitly. For other groups/proxies, check if they are active/required.
-                    if (['DIRECT', 'REJECT'].includes(proxyRef)) { // Compare original proxyRef for DIRECT/REJECT
-                        groupProxiesList.push(formatProxyRef(proxyRef));
-                    } else if (normalizedProxyRef && (allActiveProxyNames.has(normalizedProxyRef) || requiredPgKeys.has(normalizedProxyRef))) {
-                         // Find the original name for proxy references in this group
-                        const originalRefName = predefinedProxyGroups.find(p => typeof p.yamlKey === 'string' && p.yamlKey.normalize('NFC').trim() === normalizedProxyRef)?.yamlKey ||
-                                                predefinedProxies.find(p => typeof p.name === 'string' && p.name.normalize('NFC').trim() === normalizedProxyRef)?.name;
-                        if (originalRefName) {
-                            groupProxiesList.push(formatProxyRef(originalRefName));
-                        }
-                    }
-                });
+            let proxyYaml = `  - name: "${proxyTemplateName}"\n    type: ${proxyType}\n    server: ${ip}\n    port: ${proxyPort}`;
+            if (proxyType === 'socks5' || proxyType === 'http') {
+                proxyYaml += `\n    udp: ${proxyUdp}`;
             }
-
-            groupProxiesList.forEach(p => {
-                groupContent += `\n      - ${p}`;
-            });
-
-            generatedProxyGroupsYaml.push(groupContent);
+            generatedProxiesYaml.push(proxyYaml);
+            allSelectedProxyNames.add(proxyTemplateName);
         });
-        console.log("Generated Proxy Groups YAML:", generatedProxyGroupsYaml.join('\n\n'));
+
+        // جمع‌آوری پروکسی‌های کاستوم برای هر IP
+        document.querySelectorAll('#customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
+            const ip = checkbox.dataset.ip;
+            const proxyTemplateName = checkbox.dataset.name; // نام کامل شامل IP
+            const proxyType = checkbox.dataset.type;
+            const proxyPort = checkbox.dataset.port;
+            const proxyUdp = checkbox.dataset.udp === 'true';
+
+            let proxyYaml = `  - name: "${proxyTemplateName}"\n    type: ${proxyType}\n    server: ${ip}\n    port: ${proxyPort}`;
+            if (proxyType === 'socks5' || proxyType === 'http') {
+                proxyYaml += `\n    udp: ${proxyUdp}`;
+            }
+            generatedProxiesYaml.push(proxyYaml);
+            allSelectedProxyNames.add(proxyTemplateName);
+        });
+
+        console.log("Generated Proxies YAML:", generatedProxiesYaml.join('\n\n'));
+
+        // ----------------------------------------------------
+        // جایگزینی PLACEHOLDER_PROXIES_LIST در proxy-groups
+        // ----------------------------------------------------
+        const sortedActiveProxyNames = Array.from(allSelectedProxyNames).sort().map(formatProxyRef);
+        const proxyListYaml = sortedActiveProxyNames.map(name => `      - ${name}`).join('\n');
+
+        // جایگزینی PLACEHOLDER_PROXIES_LIST در هر گروه پروکسی
+        templateContent = templateContent.replace(/- PLACEHOLDER_PROXIES_LIST/g, proxyListYaml);
 
 
-        // ====================================================================
+        // ----------------------------------------------------
         // ترکیب نهایی تمامی بخش‌های کانفیگ YAML
-        // ====================================================================
+        // ----------------------------------------------------
         let finalConfigOutput = [];
 
-        finalConfigOutput.push(baseConfigContent.trim());
+        // پیدا کردن محل درج proxies
+        const proxiesSectionStart = templateContent.indexOf('proxies:');
+        const nextSectionAfterProxies = templateContent.indexOf('proxy-groups:', proxiesSectionStart);
 
-        if (generatedRuleProvidersYaml.length > 0) {
-            finalConfigOutput.push('rule-providers:');
-            finalConfigOutput.push(generatedRuleProvidersYaml.join('\n'));
-        }
-
-        if (generatedProxiesYaml.length > 0) {
-            finalConfigOutput.push('proxies:');
-            finalConfigOutput.push(generatedProxiesYaml.join('\n\n'));
-        }
-
-        if (generatedProxyGroupsYaml.length > 0) {
-            finalConfigOutput.push('proxy-groups:');
-            finalConfigOutput.push(generatedProxyGroupsYaml.join('\n\n'));
-        }
-
-        if (finalRulesList.length > 0) {
-            finalConfigOutput.push('rules:');
-            finalConfigOutput.push(finalRulesList.join('\n'));
+        if (proxiesSectionStart !== -1 && nextSectionAfterProxies !== -1) {
+            const beforeProxies = templateContent.substring(0, proxiesSectionStart + 'proxies:'.length);
+            const afterProxies = templateContent.substring(nextSectionAfterProxies);
+            
+            finalConfigOutput.push(beforeProxies);
+            if (generatedProxiesYaml.length > 0) {
+                finalConfigOutput.push(generatedProxiesYaml.join('\n\n'));
+            }
+            finalConfigOutput.push(afterProxies);
+        } else {
+            // اگر ساختار مورد انتظار یافت نشد، فقط محتوای قالب و پروکسی‌ها را اضافه کنید
+            finalConfigOutput.push(templateContent.trim());
+            if (generatedProxiesYaml.length > 0) {
+                finalConfigOutput.push('proxies:');
+                finalConfigOutput.push(generatedProxiesYaml.join('\n\n'));
+            }
         }
         
         outputConfigTextarea.value = finalConfigOutput.join('\n\n').trim();
@@ -744,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // =======================================================
-    // ۹. قابلیت دانلود کانفیگ به عنوان فایل .yaml
+    // ۷. قابلیت دانلود کانفیگ به عنوان فایل .yaml
     // =======================================================
     downloadConfigBtn.addEventListener('click', () => {
         const configContent = outputConfigTextarea.value;
@@ -760,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // =======================================================
-    // ۱۰. قابلیت اسکرول به بالا و پایین صفحه
+    // ۸. قابلیت اسکرول به بالا و پایین صفحه
     // =======================================================
     const scrollToTopBtn = document.getElementById('scrollToTopBtn');
     const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
@@ -791,22 +592,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =======================================================
-    // ۱۱. فراخوانی اولیه توابع هنگام بارگذاری صفحه
+    // ۹. فراخوانی اولیه توابع هنگام بارگذاری صفحه
     // =======================================================
     loadTheme();
 
-    const savedLanIp = localStorage.getItem('lanIp');
-    if (savedLanIp && isValidIP(savedLanIp)) {
-        lanIpInput.value = savedLanIp;
-        currentLanIp = savedLanIp;
-        toggleContentEnabled(true);
+    const savedLanIps = localStorage.getItem('lanIps'); // خواندن آرایه IP ها
+    if (savedLanIps) {
+        try {
+            const parsedIps = JSON.parse(savedLanIps);
+            if (Array.isArray(parsedIps) && parsedIps.every(isValidIP)) {
+                lanIpInput.value = parsedIps.join('\n'); // نمایش IP ها در textarea
+                currentLanIps = parsedIps;
+                toggleContentEnabled(true);
+            } else {
+                localStorage.removeItem('lanIps'); // اگر فرمت ذخیره شده خراب است، پاک کن
+                toggleContentEnabled(false);
+            }
+        } catch (e) {
+            console.error("خطا در بارگذاری IP های LAN از Local Storage:", e);
+            localStorage.removeItem('lanIps');
+            toggleContentEnabled(false);
+        }
     } else {
         toggleContentEnabled(false);
     }
 
     renderPredefinedProxies();
     loadCustomProxies();
-    renderRulesAndProviders();
-
     hideLoading();
 });
