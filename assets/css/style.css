@@ -134,21 +134,37 @@ body::after {
         linear-gradient(transparent, var(--rain-color-dark) 1px, transparent 2px),
         linear-gradient(transparent, var(--rain-color-light) 1px, transparent 2px);
     /* تنظیم اندازه و موقعیت برای هر لایه برای ایجاد افکت باران پراکنده */
-    background-size: 50px 500px, 70px 600px, 60px 700px, 80px 550px, 40px 450px; /* عرض و طول قطرات */
+    background-size: 50px 800px, 70px 900px, 60px 750px, 80px 850px, 40px 700px; /* عرض و طول قطرات */
     background-position: 0% 0%, 20% 10%, 40% 20%, 60% 30%, 80% 40%; /* موقعیت اولیه هر لایه */
-    animation: rain-fall 6s linear infinite; /* انیمیشن باران با سرعت کمتر برای افکت طبیعی‌تر */
+    animation: 
+        rain-fall-1 5s linear infinite,
+        rain-fall-2 7s linear infinite,
+        rain-fall-3 6s linear infinite,
+        rain-fall-4 4s linear infinite,
+        rain-fall-5 8s linear infinite; /* انیمیشن باران با سرعت‌های مختلف */
     pointer-events: none; /* تا روی عناصر دیگر کلیک شود */
 }
 
-/* Keyframes for rain animation */
-@keyframes rain-fall {
-    0% {
-        background-position: 0% 0%, 20% 10%, 40% 20%, 60% 30%, 80% 40%;
-    }
-    100% {
-        /* حرکت به سمت پایین با مقدار بزرگتر برای شبیه سازی افتادن قطرات */
-        background-position: 0% 100%, 20% 110%, 40% 120%, 60% 130%, 80% 140%;
-    }
+/* Keyframes for each rain layer */
+@keyframes rain-fall-1 {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 0% 100%; }
+}
+@keyframes rain-fall-2 {
+    0% { background-position: 20% 10%; }
+    100% { background-position: 20% 110%; }
+}
+@keyframes rain-fall-3 {
+    0% { background-position: 40% 20%; }
+    100% { background-position: 40% 120%; }
+}
+@keyframes rain-fall-4 {
+    0% { background-position: 60% 30%; }
+    100% { background-position: 60% 130%; }
+}
+@keyframes rain-fall-5 {
+    0% { background-position: 80% 40%; }
+    100% { background-position: 80% 140%; }
 }
 
 
@@ -716,6 +732,10 @@ body.dark-mode .social-links a {
     color: var(--primary-color); /* رنگ لینک‌ها آبی اصلی */
     font-weight: bold;
     transition: color 0.2s ease;
+}
+
+body.dark-mode .local-ip-guide-section ul.link-list a {
+    color: var(--primary-color); /* اطمینان از رنگ مناسب در دارک مود */
 }
 
 .local-ip-guide-section ul.link-list a:hover {
