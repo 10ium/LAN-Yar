@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // جمع‌آوری پروکسی‌های کاستوم برای هر IP
-        document.querySelectorAll('#customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
+        document.querySelectorAll('#customProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const ip = checkbox.dataset.ip;
             const proxyName = checkbox.dataset.name; // نام کامل شامل IP
             const proxyType = checkbox.dataset.type;
@@ -507,10 +507,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // جایگزینی PLACEHOLDER_PROXIES_LIST در proxy-groups
         // ----------------------------------------------------
         const sortedActiveProxyNames = Array.from(allSelectedProxyNames).sort().map(formatProxyRef);
-        const proxyListYaml = sortedActiveProxyNames.map(name => `      - ${name}`).join('\n');
+        // اطمینان از اینکه لیست پروکسی‌ها به درستی با ایندنت (فاصله) برای YAML فرمت شود
+        // اگر لیست خالی باشد، یک خط خالی با دو فاصله اضافه کنید تا ساختار YAML بهم نریزد
+        const proxyListYaml = sortedActiveProxyNames.length > 0 
+            ? sortedActiveProxyNames.map(name => `      - ${name}`).join('\n')
+            : '      # No proxies selected for these groups'; // یک کامنت یا خط خالی برای زمانی که پروکسی انتخاب نشده
 
         // استفاده از یک RegExp برای جایگزینی تمام رخدادهای PLACEHOLDER_PROXIES_LIST
-        // مهم: اطمینان حاصل کنید که PLACEHOLDER_PROXIES_LIST به تنهایی در یک خط باشد و با - شروع شود
+        // مهم: عبارت منظم باید دقیقاً الگوی placeholder را دنبال کند.
+        // /g برای جایگزینی تمامی رخدادها و /m برای فعال کردن حالت چند خطی (که ^ و $ روی خطوط کار کنند)
         templateContent = templateContent.replace(/^- PLACEHOLDER_PROXIES_LIST/gm, proxyListYaml);
 
 
@@ -520,28 +525,45 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalConfigOutput = [];
 
         // پیدا کردن محل درج proxies
-        const proxiesSectionStart = templateContent.indexOf('proxies:');
-        const nextSectionAfterProxies = templateContent.indexOf('proxy-groups:', proxiesSectionStart);
+        // از یک Placeholder جدید برای بخش proxies: در تمپلت استفاده می‌کنیم تا جایگذاری دقیق‌تر باشد
+        // در فایل‌های template باید proxies: را به شکل زیر تغییر دهید:
+        // proxies:
+        //   DYNAMIC_PROXIES_SECTION_PLACEHOLDER
 
-        if (proxiesSectionStart !== -1 && nextSectionAfterProxies !== -1) {
-            const beforeProxies = templateContent.substring(0, proxiesSectionStart + 'proxies:'.length);
-            const afterProxies = templateContent.substring(nextSectionAfterProxies);
-            
-            finalConfigOutput.push(beforeProxies);
-            if (generatedProxiesYaml.length > 0) {
-                finalConfigOutput.push(generatedProxiesYaml.join('\n\n'));
-            }
-            finalConfigOutput.push(afterProxies);
+        // ابتدا بخش proxies خود را به تمپلت اضافه کنید.
+        const proxiesPlaceholder = 'DYNAMIC_PROXIES_SECTION_PLACEHOLDER';
+        const proxiesSectionContent = generatedProxiesYaml.length > 0
+            ? generatedProxiesYaml.join('\n\n')
+            : '  # No proxies selected.'; // اگر هیچ پروکسی انتخاب نشد
+
+        if (templateContent.includes(proxiesPlaceholder)) {
+            templateContent = templateContent.replace(proxiesPlaceholder, proxiesSectionContent);
         } else {
-            // اگر ساختار مورد انتظار یافت نشد، فقط محتوای قالب و پروکسی‌ها را اضافه کنید
-            finalConfigOutput.push(templateContent.trim());
-            if (generatedProxiesYaml.length > 0) {
-                finalConfigOutput.push('proxies:');
-                finalConfigOutput.push(generatedProxiesYaml.join('\n\n'));
+            // اگر placeholder پیدا نشد، سعی کنید به صورت دستی جایگذاری کنید (رویکرد قبلی)
+            // این بخش به دلیل تغییرات جدید در templateContent که از قبل proxies: را دارد، ممکن است پیچیده شود.
+            // بهترین راه این است که placeholder را در تمپلت خود قرار دهید.
+            // برای جلوگیری از خطا، اطمینان حاصل شود که 'proxies:' در ابتدای یک خط باشد.
+            const lines = templateContent.split('\n');
+            let foundProxiesHeader = false;
+            let inserted = false;
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].trim() === 'proxies:') {
+                    lines.splice(i + 1, 0, proxiesSectionContent);
+                    inserted = true;
+                    break;
+                }
+            }
+            if(inserted){
+                templateContent = lines.join('\n');
+            } else {
+                 // اگر همچنان جای proxies: یافت نشد، آن را به انتها اضافه کنید
+                 if (generatedProxiesYaml.length > 0) {
+                     templateContent += '\n\nproxies:\n' + proxiesSectionContent;
+                 }
             }
         }
         
-        outputConfigTextarea.value = finalConfigOutput.join('\n\n').trim();
+        outputConfigTextarea.value = templateContent.trim(); // دیگر نیازی به join('\n\n') نیست
         downloadConfigBtn.style.display = 'block';
         hideLoading();
     });
