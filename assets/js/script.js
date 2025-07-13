@@ -1,5 +1,11 @@
 // assets/js/script.js
 
+import { predefinedProxies } from './predefinedProxies.js'; // این import همچنان لازم است
+
+// import { predefinedRuleProviders, predefinedProxyGroups, rulesToGenerate, ruleCategories } from './rulesAndGroups.js';
+// خط بالا کامنت شد/حذف شد زیرا قوانین و گروه‌های پروکسی اکنون از فایل‌های YAML ثابت خوانده می‌شوند.
+
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // =======================================================

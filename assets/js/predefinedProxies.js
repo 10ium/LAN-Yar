@@ -3,10 +3,10 @@
 // این آرایه شامل پروکسی‌های پیش‌فرض شماست.
 // هر کلاینت کنار هم گروه‌بندی شده‌اند و داخل هر گروه بر اساس محبوبیت پروتکل مرتب شده است.
 
-const predefinedProxies = [
+export const predefinedProxies = [
     // ===== Clash Client =====
     {
-        id: 'proxy_clash_mihomo',
+        id: 'proxy_clash_socks',
         name: 'Clash (SOCKS)',
         ip: '192.168.1.3',
         port: '7891',
@@ -54,7 +54,7 @@ const predefinedProxies = [
     // ===== Mahsang Client =====
     {
         id: 'proxy_mahsang',
-        name: 'Mahsang+...',
+        name: 'Mahsang',
         ip: '192.168.1.3',
         port: '10808',
         type: 'socks5',
@@ -199,5 +199,3 @@ const predefinedProxies = [
         description: 'پروکسی Shadowrocket - پورت 1082'
     }
 ];
-
-export default predefinedProxies;
