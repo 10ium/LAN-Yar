@@ -95,7 +95,7 @@ body {
     position: relative; /* برای قرار دادن انیمیشن باران در پس‌زمینه */
 }
 
-/* Background Image and Rain Animation */
+/* Background Image */
 body::before {
     content: '';
     position: fixed;
@@ -126,22 +126,28 @@ body::after {
     width: 100%;
     height: 100%;
     z-index: -1; /* روی تصویر پس‌زمینه و زیر محتوای اصلی */
-    background: 
+    /* ایجاد چندین لایه از گرادیانت برای شبیه‌سازی قطرات باران */
+    background-image: 
         linear-gradient(transparent, var(--rain-color-light) 1px, transparent 2px),
-        linear-gradient(transparent, var(--rain-color-dark) 1px, transparent 2px);
-    background-size: 100px 100%, 150px 150%; /* اندازه قطرات باران */
-    background-position: 0% 0%, 0% 0%;
-    animation: rain-fall 1s linear infinite; /* انیمیشن باران */
+        linear-gradient(transparent, var(--rain-color-dark) 1px, transparent 2px),
+        linear-gradient(transparent, var(--rain-color-light) 1px, transparent 2px),
+        linear-gradient(transparent, var(--rain-color-dark) 1px, transparent 2px),
+        linear-gradient(transparent, var(--rain-color-light) 1px, transparent 2px);
+    /* تنظیم اندازه و موقعیت برای هر لایه برای ایجاد افکت باران پراکنده */
+    background-size: 50px 500px, 70px 600px, 60px 700px, 80px 550px, 40px 450px; /* عرض و طول قطرات */
+    background-position: 0% 0%, 20% 10%, 40% 20%, 60% 30%, 80% 40%; /* موقعیت اولیه هر لایه */
+    animation: rain-fall 6s linear infinite; /* انیمیشن باران با سرعت کمتر برای افکت طبیعی‌تر */
     pointer-events: none; /* تا روی عناصر دیگر کلیک شود */
 }
 
 /* Keyframes for rain animation */
 @keyframes rain-fall {
     0% {
-        background-position: 0% 0%, 0% 0%;
+        background-position: 0% 0%, 20% 10%, 40% 20%, 60% 30%, 80% 40%;
     }
     100% {
-        background-position: 0% 100%, 0% 150%; /* حرکت قطرات باران به سمت پایین */
+        /* حرکت به سمت پایین با مقدار بزرگتر برای شبیه سازی افتادن قطرات */
+        background-position: 0% 100%, 20% 110%, 40% 120%, 60% 130%, 80% 140%;
     }
 }
 
