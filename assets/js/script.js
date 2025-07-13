@@ -218,8 +218,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentLanIps.forEach(ip => {
             predefinedProxies.forEach(proxyTemplate => {
-                const uniqueId = `${proxyTemplate.id}_${ip.replace(/\./g, '_')}`; // شناسه منحصر به فرد برای هر IP
-                const uniqueName = `${proxyTemplate.name} (${ip})`; // نام منحصر به فرد برای نمایش
+                // استفاده از نام پروکسی اصلی + IP برای uniqueId و uniqueName
+                const uniqueId = `${proxyTemplate.id}_${ip.replace(/\./g, '_')}`;
+                const uniqueName = `${proxyTemplate.name} (${ip})`;
                 
                 const proxyCard = document.createElement('div');
                 proxyCard.className = 'proxy-card';
@@ -471,33 +472,33 @@ document.addEventListener('DOMContentLoaded', () => {
         // جمع‌آوری پروکسی‌های پیش‌فرض برای هر IP
         document.querySelectorAll('#predefinedProxiesList input[type="checkbox"]:checked').forEach(checkbox => {
             const ip = checkbox.dataset.ip;
-            const proxyTemplateName = checkbox.dataset.name; // نام کامل شامل IP
+            const proxyName = checkbox.dataset.name; // نام کامل شامل IP
             const proxyType = checkbox.dataset.type;
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp === 'true';
 
-            let proxyYaml = `  - name: "${proxyTemplateName}"\n    type: ${proxyType}\n    server: ${ip}\n    port: ${proxyPort}`;
+            let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${ip}\n    port: ${proxyPort}`;
             if (proxyType === 'socks5' || proxyType === 'http') {
                 proxyYaml += `\n    udp: ${proxyUdp}`;
             }
             generatedProxiesYaml.push(proxyYaml);
-            allSelectedProxyNames.add(proxyTemplateName);
+            allSelectedProxyNames.add(proxyName);
         });
 
         // جمع‌آوری پروکسی‌های کاستوم برای هر IP
         document.querySelectorAll('#customProxiesList input[type="checkbox']:checked').forEach(checkbox => {
             const ip = checkbox.dataset.ip;
-            const proxyTemplateName = checkbox.dataset.name; // نام کامل شامل IP
+            const proxyName = checkbox.dataset.name; // نام کامل شامل IP
             const proxyType = checkbox.dataset.type;
             const proxyPort = checkbox.dataset.port;
             const proxyUdp = checkbox.dataset.udp === 'true';
 
-            let proxyYaml = `  - name: "${proxyTemplateName}"\n    type: ${proxyType}\n    server: ${ip}\n    port: ${proxyPort}`;
+            let proxyYaml = `  - name: "${proxyName}"\n    type: ${proxyType}\n    server: ${ip}\n    port: ${proxyPort}`;
             if (proxyType === 'socks5' || proxyType === 'http') {
                 proxyYaml += `\n    udp: ${proxyUdp}`;
             }
             generatedProxiesYaml.push(proxyYaml);
-            allSelectedProxyNames.add(proxyTemplateName);
+            allSelectedProxyNames.add(proxyName);
         });
 
         console.log("Generated Proxies YAML:", generatedProxiesYaml.join('\n\n'));
@@ -508,8 +509,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const sortedActiveProxyNames = Array.from(allSelectedProxyNames).sort().map(formatProxyRef);
         const proxyListYaml = sortedActiveProxyNames.map(name => `      - ${name}`).join('\n');
 
-        // جایگزینی PLACEHOLDER_PROXIES_LIST در هر گروه پروکسی
-        templateContent = templateContent.replace(/- PLACEHOLDER_PROXIES_LIST/g, proxyListYaml);
+        // استفاده از یک RegExp برای جایگزینی تمام رخدادهای PLACEHOLDER_PROXIES_LIST
+        // مهم: اطمینان حاصل کنید که PLACEHOLDER_PROXIES_LIST به تنهایی در یک خط باشد و با - شروع شود
+        templateContent = templateContent.replace(/^- PLACEHOLDER_PROXIES_LIST/gm, proxyListYaml);
 
 
         // ----------------------------------------------------
