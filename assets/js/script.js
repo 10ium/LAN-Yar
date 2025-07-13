@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const templateIranOnlyRulesRadio = document.getElementById('templateIranOnlyRules');
     const templateNoRulesRadio = document.getElementById('templateNoRules');
 
+    // عنصر جدید برای نام فایل خروجی
+    const fileNameInput = document.getElementById('fileNameInput');
+
     /**
      * نمایش پوشش بارگذاری با یک پیام مشخص.
      * @param {string} message - پیامی که باید نمایش داده شود.
@@ -177,12 +180,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (savedTheme) {
             body.classList.add(savedTheme);
             updateThemeToggleButton(savedTheme === 'dark-mode');
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            body.classList.add('dark-mode');
-            updateThemeToggleButton(true);
         } else {
-            body.classList.add('light-mode');
-            updateThemeToggleButton(false);
+            // اگر تم ذخیره نشده، بر اساس ساعت تهران تم را تنظیم کن
+            const now = new Date();
+            const tehranTimeFormatter = new Intl.DateTimeFormat('en-US', {
+                hour: 'numeric',
+                hourCycle: 'h23',
+                timeZone: 'Asia/Tehran'
+            });
+            const tehranHour = parseInt(tehranTimeFormatter.format(now));
+
+            // فرض می‌کنیم بین ساعت 19 (7 شب) تا 6 صبح حالت تاریک باشد
+            if (tehranHour >= 19 || tehranHour < 6) {
+                body.classList.add('dark-mode');
+                updateThemeToggleButton(true);
+                localStorage.setItem('theme', 'dark-mode'); // ذخیره تم بر اساس ساعت
+            } else {
+                body.classList.add('light-mode');
+                updateThemeToggleButton(false);
+                localStorage.setItem('theme', 'light-mode'); // ذخیره تم بر اساس ساعت
+            }
         }
     }
 
@@ -537,16 +554,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // ۷. قابلیت دانلود کانفیگ به عنوان فایل .yaml
     // =======================================================
     downloadConfigBtn.addEventListener('click', () => {
+        let filename = fileNameInput.value.trim();
+        if (filename === '') {
+            filename = 'config'; // نام پیش‌فرض
+        }
+        filename += '.yaml'; // همیشه پسوند .yaml را اضافه کن
+
         const configContent = outputConfigTextarea.value;
         const blob = new Blob([configContent], { type: 'text/yaml;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'config.yaml';
+        a.download = filename; // استفاده از نام فایل تعیین شده توسط کاربر
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+
+        // ذخیره نام فایل در Local Storage برای استفاده بعدی
+        localStorage.setItem('lastFileName', fileNameInput.value.trim());
     });
 
     // =======================================================
@@ -584,6 +610,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // ۹. فراخوانی اولیه توابع هنگام بارگذاری صفحه
     // =======================================================
     loadTheme();
+
+    // بارگذاری نام فایل ذخیره شده
+    const savedFileName = localStorage.getItem('lastFileName');
+    if (savedFileName) {
+        fileNameInput.value = savedFileName;
+    } else {
+        fileNameInput.value = 'config'; // نام پیش‌فرض در ابتدا
+    }
 
     const savedLanIps = localStorage.getItem('lanIps'); // خواندن آرایه IP ها
     if (savedLanIps) {

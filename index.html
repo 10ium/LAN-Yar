@@ -33,6 +33,47 @@
             <button id="validateLanIpBtn">تأیید و ادامه</button>
         </section>
 
+        <!-- بخش جدید: راهنمای پیدا کردن IP لوکال -->
+        <section class="local-ip-guide-section panel">
+            <h2>راهنمای پیدا کردن IP لوکال 💡</h2>
+            <p>برای پیدا کردن آدرس IP لوکال دستگاه VPN خود، می‌توانید از روش‌های زیر استفاده کنید:</p>
+            
+            <h3>۱. از طریق مرورگر:</h3>
+            <ul class="link-list">
+                <li>
+                    <a href="https://www.whatismybrowser.com/detect/what-is-my-local-ip-address/" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> WhatIsMyBrowser - Local IP
+                    </a>
+                </li>
+                <li>
+                    <a href="https://browserleaks.com/webrtc" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> BrowserLeaks - WebRTC Local IP
+                    </a>
+                </li>
+            </ul>
+
+            <h3>۲. برای دستگاه‌های اندروید:</h3>
+            <p>می‌توانید اپلیکیشن زیر را نصب کنید:</p>
+            <ul class="link-list">
+                <li>
+                    <a href="https://play.google.com/store/apps/details?id=net.techet.netanalyzerlite.an" target="_blank">
+                        <i class="fab fa-google-play"></i> Net Analyzer Lite (Google Play)
+                    </a>
+                </li>
+            </ul>
+
+            <h3>۳. از طریق خود نرم‌افزار VPN:</h3>
+            <p>برخی از نرم‌افزارهای VPN قابلیت نمایش IP لوکال را دارند، از جمله:</p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check-circle"></i> Mahsang (مهسا ان جی)</li>
+                <li><i class="fas fa-check-circle"></i> Karing (کارینگ)</li>
+            </ul>
+            <p class="info-message">
+                **نکته:** IP لوکال معمولاً با <code>192.168.x.x</code> یا <code>10.x.x.x</code> شروع می‌شود.
+            </p>
+        </section>
+        <!-- پایان بخش جدید -->
+
         <div id="mainContentWrapper" class="disabled-content">
             <section class="predefined-proxies-section panel">
                 <h2>۲. انتخاب سرورهای پیش‌فرض</h2>
@@ -94,15 +135,44 @@
 
             <section class="output-section panel">
                 <h2>۵. کانفیگ MiHoMo نهایی</h2>
+                <div class="file-name-input-group">
+                    <label for="fileNameInput">نام فایل خروجی:</label>
+                    <input type="text" id="fileNameInput" placeholder="مثال: my_mihomo_config">
+                </div>
                 <button id="generateConfigBtn">تولید کانفیگ</button>
                 <textarea id="outputConfig" readonly rows="20" placeholder="کانفیگ تولید شده در اینجا نمایش داده خواهد شد..."></textarea>
-                <button id="downloadConfigBtn" style="display: none;">دانلود کانفیگ (config.yaml)</button>
+                <button id="downloadConfigBtn" style="display: none;">دانلود کانفیگ (.yaml)</button>
             </section>
         </div>
     </main>
 
     <footer class="disabled-content">
         <p>&copy; ۲۰۲۵ ساخته شده با ❤️ برای جامعه اینترنت</p>
+        <div class="social-links">
+            <a href="https://t.me/vpnclashfa" target="_blank" rel="noopener noreferrer">
+                <img src="https://www.google.com/s2/favicons?sz=32&domain=t.me" alt="تلگرام">
+                <span>تلگرام</span>
+            </a>
+            <a href="https://twitter.com/coldwater_10" target="_blank" rel="noopener noreferrer">
+                <img src="https://www.google.com/s2/favicons?sz=32&domain=twitter.com" alt="توییتر">
+                <span>توییتر</span>
+            </a>
+            <a href="https://www.tvtime.com/en/user/43351079/profile" target="_blank" rel="noopener noreferrer">
+                <img src="https://www.google.com/s2/favicons?sz=32&domain=tvtime.com" alt="تی‌وی تایم">
+                <span>تی‌وی تایم</span>
+            </a>
+            <a href="https://linktr.ee/coldwater_10" target="_blank" rel="noopener noreferrer">
+                <img src="https://www.google.com/s2/favicons?sz=32&domain=linktr.ee" alt="لینک‌تری">
+                <span>لینک‌تری</span>
+            </a>
+            <a href="https://github.com/10ium/free-sub-link" target="_blank" rel="noopener noreferrer" class="free-config-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 10px; vertical-align: middle;">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z"></path>
+                </svg>
+                <span>کانفیگ رایگان</span>
+            </a>
+        </div>
     </footer>
 
     <button id="scrollToTopBtn" class="scroll-btn" title="برو بالا">
