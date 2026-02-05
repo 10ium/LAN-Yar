@@ -54,7 +54,7 @@ export const predefinedProxies = [
     // ===== Mahsang Client =====
     {
         id: 'proxy_mahsang',
-        name: 'Mahsang',
+        name: 'Mahsang - Npv Tunnel',
         ip: '192.168.1.3',
         port: '10808',
         type: 'socks5',
@@ -70,7 +70,7 @@ export const predefinedProxies = [
         port: '1080',
         type: 'socks5',
         udp: true,
-        description: 'پورت عمومی LAN برای VPNهای دیگر (مثل OpenVPN)'
+        description: 'پورت عمومی LAN برای VPNهای دیگر (مثل OpenVPN یا اپ Gnet Proxy)'
     },
 
     // ===== Geph Client =====
@@ -187,7 +187,24 @@ export const predefinedProxies = [
         udp: true,
         description: 'پروکسی Exclave - پورت 2080'
     },
-
+    {
+        id: 'proxy_orbot_http',
+        name: 'Orbot http',
+        ip: '192.168.1.3',
+        port: '8118',
+        type: 'http',
+        udp: true,
+        description: 'پروکسی Orbot - پورت 8118'
+    },
+    {
+        id: 'proxy_orbot_socks',
+        name: 'Orbot socks',
+        ip: '192.168.1.3',
+        port: '9050',
+        type: 'socks5',
+        udp: true,
+        description: 'پروکسی Orbot - پورت 8118'
+    },
     // ===== Shadowrocket Client =====
     {
         id: 'proxy_shadowrocket',
