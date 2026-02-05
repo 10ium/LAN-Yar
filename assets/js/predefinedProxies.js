@@ -203,7 +203,7 @@ export const predefinedProxies = [
         port: '9050',
         type: 'socks5',
         udp: true,
-        description: 'پروکسی Orbot - پورت 8118'
+        description: 'پروکسی Orbot - پورت 9050'
     },
     // ===== Shadowrocket Client =====
     {
