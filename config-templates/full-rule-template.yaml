@@ -491,9 +491,7 @@ proxy-groups:
     icon: https://www.svgrepo.com/show/7876/speedometer.svg
     url: https://api.v2fly.org/checkConnection.svgz
     interval: 300
-    timeout: 5000
     tolerance: 50
-    max-failed-times: 3
     lazy: true
     proxies:
       # PROXIES_LIST_PLACEHOLDER # Placeholder for dynamically generated proxy list
