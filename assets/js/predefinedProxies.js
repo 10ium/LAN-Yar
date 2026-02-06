@@ -89,19 +89,19 @@ export const predefinedProxies = [
         id: 'proxy_karing_rule',
         name: 'Karing (Rule)',
         ip: '192.168.1.3',
-        port: '3067',
+        port: '4067',
         type: 'socks5',
         udp: true,
-        description: 'پروکسی Karing با Rule - پورت 3067'
+        description: 'پروکسی Karing با Rule - پورت 4067'
     },
     {
         id: 'proxy_karing_no_rule',
         name: 'Karing (No Rule)',
         ip: '192.168.1.3',
-        port: '3066',
+        port: '4066',
         type: 'socks5',
         udp: true,
-        description: 'پروکسی Karing بدون Rule - پورت 3066'
+        description: 'پروکسی Karing بدون Rule - پورت 4066'
     },
 
     // ===== Surfboard Client =====
